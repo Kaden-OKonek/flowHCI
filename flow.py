@@ -78,6 +78,9 @@ def load_image(name: str, colorkey: pg._common._ColorValue = None) -> pg.Surface
     return image
 
 
+TILE_STATES = {
+    [0, 0]: "start",
+}
 tiles = dict()
 
 # Import tiles sprites
@@ -93,17 +96,20 @@ class Tile(pg.sprite.Sprite):
     def __init__(self, x: int, y: int, color: str = None):
         super().__init__()
 
+        self.is_start = True
+        self.is_path = False
+
         if color is None:
             color = "empty"
             self.is_empty = True
+            self.is_start = False
+
         self.color = color
 
         self.image = tiles[color][0]
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-
-        self.is_selected = False
 
     def update(self):
         pass

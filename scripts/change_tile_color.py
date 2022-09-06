@@ -7,11 +7,7 @@ tiles_directory = (
 ).resolve()
 
 tiles_names = [
-    "tile_0",
-    "tile_1",
-    "tile_2",
-    "tile_3",
-    "tile_4",
+    "tile_00",
     "tile_01",
     "tile_02",
     "tile_03",
@@ -22,6 +18,10 @@ tiles_names = [
     "tile_41",
     "tile_13",
     "tile_24",
+    "tile_15",
+    "tile_25",
+    "tile_35",
+    "tile_45",
 ]
 tile_types = ["", "_placed"]
 tile_ext = ".png"
