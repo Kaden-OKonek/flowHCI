@@ -23,16 +23,16 @@ tiles_names = [
     "tile_13",
     "tile_24",
 ]
-tile_types = ["", "_selected"]
+tile_types = ["", "_path"]
 tile_ext = ".png"
 
 original_color = [
-    "red",
-    (255, 0, 0),
+    "white",
+    (255, 255, 255),
 ]
 
 new_colors = {
-    "white": (255, 255, 255),
+    "red": (255, 0, 0),
     "silver": (192, 192, 192),
     "gray": (128, 128, 128),
     "green": (0, 128, 0),
