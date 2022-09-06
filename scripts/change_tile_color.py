@@ -23,7 +23,7 @@ tiles_names = [
     "tile_13",
     "tile_24",
 ]
-tile_types = ["", "_path"]
+tile_types = ["", "_placed"]
 tile_ext = ".png"
 
 original_color = [
