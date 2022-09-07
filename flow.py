@@ -1,6 +1,8 @@
-import sys, os
+import os
 import pygame as pg
+
 from values import *
+from grid import Grid
 
 pg.init()
 
