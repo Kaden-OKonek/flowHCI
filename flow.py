@@ -78,23 +78,19 @@ TILE_STATES = [
 tiles = dict()
 for color in COLORS:
     tiles[color] = dict()
-    is_placed_state = {0: "", 1: "_placed"}
-
     for state in TILE_STATES:
-        for is_placed, is_placed_str in is_placed_state.items():
-            tiles[color][(state[0], state[1], is_placed)] = load_image(
-                os.path.join(
-                    "sprites",
-                    "tiles",
-                    color,
-                    f"tile_{state[0]}{state[1]}{is_placed_str}_{color}.png",
-                )
+        tiles[color][(state[0], state[1])] = load_image(
+            os.path.join(
+                "sprites",
+                "tiles",
+                color,
+                f"tile_{state[0]}{state[1]}_{color}.png",
             )
+        )
 # Empty tile
 TILE_STATES += [(-1, -1)]
 tiles["empty"] = {
-    (-1, -1, 0): load_image(os.path.join("sprites", "tiles", "tile_empty.png")),
-    (-1, -1, 1): load_image(os.path.join("sprites", "tiles", "tile_empty.png")),
+    (-1, -1): load_image(os.path.join("sprites", "tiles", "tile_empty.png"))
 }
 
 

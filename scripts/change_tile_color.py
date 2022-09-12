@@ -23,7 +23,6 @@ tiles_names = [
     "tile_35",
     "tile_45",
 ]
-tile_types = ["", "_placed"]
 tile_ext = ".png"
 
 original_color = [
@@ -51,21 +50,20 @@ new_colors = {
 
 for tile_name in tiles_names:
     for color_name, color in new_colors.items():
-        for tile_type in tile_types:
-            tile_file = tile_name + tile_type + "_" + original_color[0] + tile_ext
-            im = Image.open(tiles_directory / original_color[0] / tile_file)
-            data = np.array(im)
-            r1, g1, b1 = original_color[1]
-            r2, g2, b2 = color
-            red, green, blue = data[:, :, 0], data[:, :, 1], data[:, :, 2]
-            mask = (red == r1) & (green == g1) & (blue == b1)
-            data[:, :, :3][mask] = [r2, g2, b2]
-            im = Image.fromarray(data)
-            new_tile_file = tile_name + tile_type + "_" + color_name + tile_ext
+        tile_file = tile_name + "_" + original_color[0] + tile_ext
+        im = Image.open(tiles_directory / original_color[0] / tile_file)
+        data = np.array(im)
+        r1, g1, b1 = original_color[1]
+        r2, g2, b2 = color
+        red, green, blue = data[:, :, 0], data[:, :, 1], data[:, :, 2]
+        mask = (red == r1) & (green == g1) & (blue == b1)
+        data[:, :, :3][mask] = [r2, g2, b2]
+        im = Image.fromarray(data)
+        new_tile_file = tile_name + "_" + color_name + tile_ext
 
-            if not os.path.exists(tiles_directory / color_name):
-                os.makedirs(tiles_directory / color_name)
+        if not os.path.exists(tiles_directory / color_name):
+            os.makedirs(tiles_directory / color_name)
 
-            im.save(
-                tiles_directory / color_name / new_tile_file,
-            )
+        im.save(
+            tiles_directory / color_name / new_tile_file,
+        )
