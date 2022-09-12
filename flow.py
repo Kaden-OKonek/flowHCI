@@ -19,12 +19,11 @@ ASSETS_DIR = os.path.join(BASE_DIR, "assets")
 TILE_SIZE = 48
 
 # Display initialization
-DISPLAY_WIDTH = TILE_SIZE * MAX_GRID_N
-DISPLAY_HEIGHT = TILE_SIZE * MAX_GRID_N
+FPS = 60
+WINDOW_SIZE = (TILE_SIZE * MAX_GRID_N, TILE_SIZE * MAX_GRID_N)
 
-FPS = 30
 
-window = pg.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT))
+window = pg.display.set_mode(WINDOW_SIZE)
 pg.display.set_caption("Flow")
 timer = pg.time.Clock()
 
@@ -71,4 +70,5 @@ class Tile(pg.sprite.Sprite):
         pass
 
 
-tile = Tile(0, 0, ["red", "blue", "green"], 1)
+while True:
+    pass

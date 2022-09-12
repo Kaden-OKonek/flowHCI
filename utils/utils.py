@@ -1,7 +1,8 @@
 import pygame as pg
+from typing import Tuple
 
 
-def load_image(file: str, scale: tuple = None) -> pg.Surface:
+def load_image(file: str, scale: Tuple = None) -> pg.Surface:
     """Loads an image from the assets directory and returns it as a Surface object
 
     Args:
