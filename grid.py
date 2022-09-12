@@ -1,5 +1,5 @@
 from pprint import pprint
-from values import *
+from utils.values import *
 import random
 import pprint
 

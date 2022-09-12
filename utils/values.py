@@ -24,3 +24,22 @@ MAX_POINTS = len(COLORS)
 
 # Grid size
 MAX_GRID_N = 15  # 15x15 is the maximum grid size
+
+# Tile states
+TILE_STATES = [
+    (0, 0),  # "start",
+    (0, 1),  # "start_to_up",
+    (0, 2),  # "start_to_right",
+    (0, 3),  # "start_to_down",
+    (0, 4),  # "start_to_left",
+    (1, 3),  # "vertical",
+    (2, 4),  # "horizontal",
+    (1, 2),  # "up_to_right",
+    (2, 3),  # "right_to_down",
+    (3, 4),  # "down_to_left",
+    (4, 1),  # "left_to_up",
+    (1, 5),  # "up_to_middle",
+    (2, 5),  # "right_to_middle",
+    (3, 5),  # "down_to_middle",
+    (4, 5),  # "left_to_middle",
+]
