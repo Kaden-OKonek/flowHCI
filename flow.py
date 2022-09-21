@@ -35,13 +35,16 @@ tiles = dict()
 for color in COLORS:
     tiles[color] = dict()
     for state in TILE_STATES:
+        s1 = min(state[0], state[1])
+        s2 = max(state[0], state[1])
+
         tiles[color][state] = load_image(
             os.path.join(
                 ASSETS_DIR,
                 "sprites",
                 "tiles",
                 color,
-                f"tile_{state[0]}{state[1]}_{color}.png",
+                f"tile_{s1}{s2}_{color}.png",
             )
         )
 # Empty tile
