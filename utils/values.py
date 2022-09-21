@@ -27,11 +27,15 @@ MAX_GRID_N = 15  # 15x15 is the maximum grid size
 
 # Tile states
 TILE_STATES = [
-    (0, 0),  # "start",
+    (0, 0),  # "start" / "end",
     (0, 1),  # "start_to_up",
     (0, 2),  # "start_to_right",
     (0, 3),  # "start_to_down",
     (0, 4),  # "start_to_left",
+    (1, 0),  # "up_to_end",
+    (2, 0),  # "right_to_end",
+    (3, 0),  # "down_to_end",
+    (4, 0),  # "left_to_end",
     (1, 3),  # "up_to_down",
     (3, 1),  # "down_to_up",
     (2, 4),  # "left_to_right",
