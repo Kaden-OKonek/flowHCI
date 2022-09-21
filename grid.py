@@ -209,8 +209,9 @@ class Grid:
             # Remove all path cells after the given cell
             while self.paths[self._current_path][-1] != (row, col):
                 r, c = self.paths[self._current_path].pop()
-                # Also mark the cell as empty in the grid
-                self.grid[r][c] = (0, 0, 0)
+                # Also mark the cell as empty in the grid (only if it isn't a point)
+                if self.grid[r][c][1] != 0:
+                    self.grid[r][c] = (0, 0, 0)
             # Update the state of the cell so that it ends the current path
             position_last_cell = self.position_of(
                 (row, col), self.paths[self._current_path][-2]
@@ -253,7 +254,7 @@ class Grid:
             self.grid[r][c] = (self._current_path, last_pos, new_pos)
             # Add the new cell to the path, updated its state and end the path
             self.paths[self._current_path].append((row, col))
-            self.grid[row][col] = (self._current_path, new_pos, 0)
+            self.grid[row][col] = (self._current_path, 0, new_pos)
             self.end_path()
         # If the cell is the same color as the path, backtrack
         elif self.grid[row][col][0] == self._current_path:
