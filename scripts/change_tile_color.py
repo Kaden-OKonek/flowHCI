@@ -15,7 +15,7 @@ tiles_names = [
     "tile_12",
     "tile_23",
     "tile_34",
-    "tile_41",
+    "tile_14",
     "tile_13",
     "tile_24",
     "tile_15",
