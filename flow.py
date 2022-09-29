@@ -1,13 +1,14 @@
 import os
 import pygame as pg
 import pygame_menu as pgm
-import json
+import pygame.freetype as pgft
 
 from utils.values import *
 from utils.utils import *
 from grid import Grid
 
 pg.init()
+pg.font.init()
 
 # GLOBAL DEFINITIONS
 
@@ -23,11 +24,15 @@ TILE_SIZE = 48
 FPS = 60
 WINDOW_SIZE = (TILE_SIZE * MAX_GRID_N, TILE_SIZE * MAX_GRID_N)
 
-
+# Window and clock
 window = pg.display.set_mode(WINDOW_SIZE)
 pg.display.set_caption("Flow")
 clock = pg.time.Clock()
 
+# Fonts
+GAME_FONT = pgft.Font(
+    os.path.join(ASSETS_DIR, "fonts", "Roboto", "Roboto-Regular.ttf"), 24
+)
 
 # IMPORT ASSETS
 
@@ -78,10 +83,10 @@ class Tile(pg.sprite.Sprite):
         self.rect.y = self.row * TILE_SIZE
 
 
-colors = randomize_colors(5)
+levels = load_levels(os.path.join(DATA_DIR, "levels.json"))
+colors = randomize_colors(list(COLORS.keys()), 5)
 
-data_file = os.path.join(DATA_DIR, "levels.json")
-grid = Grid.from_dict(json.load(open(data_file, "r"))[0])
+grid = Grid.from_dict(levels[0])
 
 grid_gui = []
 for row in range(5):
@@ -104,7 +109,7 @@ for row in range(5):
 # When the user lifts the click, the Grid stops the path, and the GUI is
 # updated accordingly.
 # The Grid starts a path with the start_path(row, col) method.
-# The Grid continues a path with the move(row, col) method.
+# The Grid continues a path with the move_path(row, col) method.
 # The Grid stops a path with the end_path() method.
 
 while True:
@@ -123,7 +128,7 @@ while True:
             pos = pg.mouse.get_pos()
             row = pos[1] // TILE_SIZE
             col = pos[0] // TILE_SIZE
-            grid.move(row, col)
+            grid.move_path(row, col)
 
     for row in range(5):
         for col in range(5):
@@ -135,6 +140,15 @@ while True:
     for row in range(5):
         for col in range(5):
             window.blit(grid_gui[row][col].image, grid_gui[row][col].rect)
-    pg.display.update()
+    # render grid.progress() as text below the grid
+    text_surface, rect = GAME_FONT.render(
+        f"Progress: {grid.progress()}", (255, 255, 255)
+    )
+    window.blit(text_surface, (0, 5 * TILE_SIZE))
+    # render grid.moves as text below the progress
+    text_surface, rect = GAME_FONT.render(f"Moves: {grid.moves}", (255, 255, 255))
+    window.blit(text_surface, (0, 5 * TILE_SIZE + 24))
+
+    pg.display.flip()
 
     clock.tick(FPS)

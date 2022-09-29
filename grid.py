@@ -42,15 +42,17 @@ class Grid:
 
         assert len(self.points) == self.qpoints, f"len(points) must be equal to qpoints"
 
-        # Create grid with states (0, 0, 0)
-        # (0, 0, 0) means empty tile
+        # Create grid with states (0, 0, 0) (empty tiles)
         self.grid = [[(0, 0, 0) for _ in range(cols)] for _ in range(rows)]
         # Set points
         self._initialize_grid()
 
         self.paths = [[]] * (qpoints + 1)
         self._is_pathing = False
-        self._current_path = None
+        self._current_path = 0
+
+        # Tracks how many moves have been played
+        self.moves = 0
 
     def from_dict(data: dict) -> Grid:
         """Creates a grid from a dictionary.
@@ -231,7 +233,7 @@ class Grid:
                 self.grid[r][c] = (self._current_path, 0, 0)
 
     def start_path(self, row: int = None, col: int = None) -> None:
-        """Starts a path from the given cell:
+        """Starts a path from the given cell and tracks moves.
         - If the cell is empty / isn't valid, it does nothing.
         - If the cell is a point, it starts a path of that color.
         - If the cell is a non-point color, it continues the path
@@ -251,7 +253,10 @@ class Grid:
             return
 
         self._is_pathing = True
-        self._current_path = self.grid[row][col][0]
+        # If the cell isn't the same current path, increment the moves
+        if self.grid[row][col][0] != self._current_path:
+            self._current_path = self.grid[row][col][0]
+            self.moves += 1
 
         # If there is no path, start a new path
         if self.paths[self._current_path] == []:
@@ -271,7 +276,6 @@ class Grid:
         """Ends the current path."""
 
         self._is_pathing = False
-        self._current_path = None
 
     def _move_to_cell(self, row: int, col: int) -> None:
         """Adds the given cell to the current path.
@@ -296,7 +300,7 @@ class Grid:
         # Add the new cell to the path
         self.paths[self._current_path] += [(row, col)]
 
-    def move(self, row: int = None, col: int = None) -> None:
+    def move_path(self, row: int = None, col: int = None) -> None:
         """Moves the current path to the given cell.
         - If the cell is valid and adjacent to the last path cell,
           it adds the cell to the path.

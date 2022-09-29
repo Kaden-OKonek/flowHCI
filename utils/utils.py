@@ -1,7 +1,6 @@
 import pygame as pg
 import random
-
-from .values import COLORS
+import json
 
 
 def load_image(file: str, scale: tuple[int, int] = None) -> pg.Surface:
@@ -29,20 +28,40 @@ def load_image(file: str, scale: tuple[int, int] = None) -> pg.Surface:
     return surface.convert()
 
 
-def randomize_colors(quantity: int) -> list:
-    """Returns a list of random colors. The first color is
-    always "empty" and the rest are random colors from the
-    values.COLORS dict.
+def randomize_colors(colors: list, quantity: int) -> list:
+    """Chooses a random subset of colors from a list of colors.
+    Adds an "empty" color as the first element of the subset.
 
     Args:
-        quantity (int): number of colors to be generated
-        (excluding the "empty" color)
+        colors (list): list of color names
+        quantity (int): number of colors to choose.
+        Excludes the empty color.
 
     Returns:
-        list: list of color names
+        list: chosen list of colors names
     """
 
-    colors = list(COLORS.keys())
     random.shuffle(colors)
     # return list with empty color at the start
     return ["empty"] + colors[:quantity]
+
+
+def load_levels(file: str) -> list:
+    """Loads levels from a JSON file.
+
+    Args:
+        file (str): path to the JSON file
+
+    Raises:
+        Exception: if the file is not found or cannot be loaded
+
+    Returns:
+        list: list of levels
+    """
+
+    try:
+        file = open(file, "r")
+    except FileNotFoundError as message:
+        print("Cannot load levels:", file)
+        raise Exception(message)
+    return json.load(file)
