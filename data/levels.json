@@ -2,7 +2,8 @@
   {
     "rows": 5,
     "cols": 5,
-    "starting_points": [
+    "qpoints": 5,
+    "points": [
       [
         [0, 0],
         [4, 1]

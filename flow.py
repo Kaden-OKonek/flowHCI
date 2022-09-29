@@ -1,6 +1,7 @@
 import os
 import pygame as pg
 import pygame_menu as pgm
+import json
 
 from utils.values import *
 from utils.utils import *
@@ -77,9 +78,11 @@ class Tile(pg.sprite.Sprite):
         self.rect.y = self.row * TILE_SIZE
 
 
-colors = ["empty", "red", "yellow"]
+colors = ["empty", "red", "green", "blue", "yellow", "magenta"]
 
-grid = Grid(5, 5, len(colors) - 1)
+data_file = os.path.join(DATA_DIR, "levels.json")
+grid = Grid.from_dict(json.load(open(data_file, "r"))[0])
+
 grid_gui = []
 for row in range(5):
     grid_gui.append([])

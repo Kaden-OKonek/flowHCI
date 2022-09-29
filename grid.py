@@ -1,5 +1,6 @@
-from utils.values import *
+from __future__ import annotations
 import random
+from utils.values import *
 
 
 class Grid:
@@ -36,13 +37,8 @@ class Grid:
         self.cols = cols
         self.qpoints = qpoints
         self.points = points
-        self._points_set = set()
         if self.points == []:
             self._randomize_points()
-        else:
-            for i in range(self.points):
-                for row, col in self.points[i]:
-                    self._points_set.add((row, col))
 
         assert len(self.points) == self.qpoints, f"len(points) must be equal to qpoints"
 
@@ -55,6 +51,23 @@ class Grid:
         self.paths = [[]] * (qpoints + 1)
         self._is_pathing = False
         self._current_path = None
+
+    def from_dict(data: dict) -> Grid:
+        """Creates a grid from a dictionary.
+
+        Args:
+            data (dict): dictionary with the same keys as the constructor
+
+        Returns:
+            Grid: grid created from the dictionary
+        """
+
+        return Grid(
+            data["rows"],
+            data["cols"],
+            data["qpoints"],
+            data["points"],
+        )
 
     def __str__(self) -> str:
         return str(self.grid)
@@ -71,16 +84,6 @@ class Grid:
         row, col = tuple
         return self.grid[row][col]
 
-    def __setitem__(self, tuple: tuple[int, int], value: tuple[int, int, int]) -> None:
-        """Sets the state of the cell at the given position
-
-        Args:
-            tuple (tuple[int, int]): position of the cell
-            value (tuple[int, int, int]): state to set
-        """
-
-        self.grid[tuple[0]][tuple[1]] = value
-
     def _randomize_point(self) -> tuple[int, int]:
         """Calculates a random point position
 
@@ -92,14 +95,15 @@ class Grid:
     def _randomize_points(self) -> None:
         """Randomize points. Only called if points is not given"""
 
+        points_set = set()
         for i in range(self.qpoints):
-            self.points.append([])
+            self.points += [[]]
             for _ in range(2):  # 2 points per ith-color
                 row, col = self._randomize_point()
-                while (row, col) in self._points_set:
+                while (row, col) in points_set:
                     row, col = self._randomize_point()
-                self._points_set.add((row, col))
-                self.points[i] += [(row, col)]
+                points_set.add((row, col))
+                self.points[i] += [[row, col]]
 
     def _initialize_grid(self) -> None:
         """Initialize the grid with the points"""
@@ -258,7 +262,6 @@ class Grid:
             self.paths[self._current_path] = [(row, col)]
         # Else, continue the path from the given cell
         else:
-            # Restart the path until the given cell
             self._restart_path_until_cell(row, col)
             # Update the state of the cell so that it ends the current path
             pos = self._position_of((row, col), self.paths[self._current_path][-2])
@@ -297,6 +300,8 @@ class Grid:
         """Moves the current path to the given cell.
         - If the cell is valid and adjacent to the last path cell,
           it adds the cell to the path.
+        - If the cell is second to last in the current path, it
+          backtracks to it.
         - Otherwise, it does nothing.
 
         Args:
@@ -310,23 +315,26 @@ class Grid:
             return
         if not self._is_valid_cell(row, col):
             return
-        # Can't move to last cell in path
+        if not self._are_adjacent(self.paths[self._current_path][-1], (row, col)):
+            return
+        # Can't move to itself
         if self.paths[self._current_path][-1] == (row, col):
             return
-        # Can only move to empty cells
-        # or second to last cell in path (to backtrack)
+        # Can move to empty cells
         # or the other point
-        if (
-            self.grid[row][col] != (0, 0, 0)
-            and self.paths[self._current_path][-2]
-            != (
-                row,
-                col,
-            )
-            and not self.grid[row][col] == (self._current_path, 0, 0)
+        if self.grid[row][col] == (0, 0, 0) or self.grid[row][col] == (
+            self._current_path,
+            0,
+            0,
         ):
-            return
-        if not self._are_adjacent(self.paths[self._current_path][-1], (row, col)):
+            pass
+        # or to the second to last cell in the path
+        elif len(self.paths[self._current_path]) > 1:
+            if self.paths[self._current_path][-2] == (row, col):
+                pass
+            else:
+                return
+        else:
             return
 
         # If the cell is the other point, end the path
@@ -338,7 +346,6 @@ class Grid:
             # If the cell is the second to last of the current path, backtrack
             if self.paths[self._current_path][-2] == (row, col):
                 r, c = self.paths[self._current_path].pop()
-                # Mark the last cell as empty in the grid
                 self.grid[r][c] = (0, 0, 0)
                 # If the new last cell is a point, mark it as no path
                 if len(self.paths[self._current_path]) == 1:
