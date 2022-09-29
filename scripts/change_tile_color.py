@@ -31,9 +31,11 @@ original_color = [
 ]
 
 new_colors = {
-    "red": (255, 0, 0),
     "silver": (192, 192, 192),
     "gray": (128, 128, 128),
+    "red": (255, 0, 0),
+    "orange": (255, 165, 0),
+    "moccasin": (255, 228, 181),
     "green": (0, 128, 0),
     "lime": (0, 255, 0),
     "yellow": (255, 255, 0),
@@ -44,8 +46,6 @@ new_colors = {
     "teal": (0, 128, 128),
     "cyan": (0, 255, 255),
     "maroon": (128, 0, 0),
-    "orange": (255, 165, 0),
-    "moccasin": (255, 228, 181),
 }
 
 for tile_name in tiles_names:
