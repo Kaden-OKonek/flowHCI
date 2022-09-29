@@ -11,49 +11,45 @@ class Grid:
     The GUI is supossed to create a grid and then use it to both send new
     moves and print the current state of the grid as a matrix of tiles."""
 
-    def __init__(
-        self, rows: int, cols: int, points: int, starting_points: list = []
-    ) -> None:
-        """Initialize a grid with the given rows, cols and points. If starting_points
-        is not empty, it will be used as the starting points of the grid
+    def __init__(self, rows: int, cols: int, qpoints: int, points: list = []) -> None:
+        """Initialize a grid with the given rows, cols and points. If points
+        is not empty, it will be used as the points of the grid
 
         Args:
             rows (int): number of rows. Must be between 2 and MAX_GRID_N
             cols (int): number of columns. Must be between 2 and MAX_GRID_N
-            points (int): number of points. Must be between MIN_POINTS and MAX_POINTS
-            starting_points (list, optional): 2D list of tuples where:
-                - list[i] is the i-th starting point
-                - list[i][0] is (row, col) of the starting point of i
-                - list[i][1] is (row, col) of the 2nd starting point of i
+            qpoints (int): quantity of points. Must be between MIN_POINTS and MAX_POINTS
+            points (list, optional): 2D list of tuples where:
+                - list[i] are the i-th points
+                - list[i][0] is (row, col) of the 1st point of i
+                - list[i][1] is (row, col) of the 2nd point of i
                 Initialized at random if not given.
         """
 
         assert (
-            MIN_POINTS <= points <= MAX_POINTS
-        ), f"points must be between {MIN_POINTS} and {MAX_POINTS}"
+            MIN_POINTS <= qpoints <= MAX_POINTS
+        ), f"qpoints must be between {MIN_POINTS} and {MAX_POINTS}"
         assert 2 <= rows <= MAX_GRID_N, f"rows must be between 2 and {MAX_GRID_N}"
         assert 2 <= cols <= MAX_GRID_N, f"cols must be between 2 and {MAX_GRID_N}"
 
         self.rows = rows
         self.cols = cols
+        self.qpoints = qpoints
         self.points = points
-        self.starting_points = starting_points
-        self._starting_points_set = set()
-        if self.starting_points == []:
-            self._randomize_starting_points()
+        self._points_set = set()
+        if self.points == []:
+            self._randomize_points()
         else:
             for i in range(self.points):
-                for row, col in self.starting_points[i]:
-                    self._starting_points_set.add((row, col))
+                for row, col in self.points[i]:
+                    self._points_set.add((row, col))
 
-        assert (
-            len(self.starting_points) == self.points
-        ), f"len(starting_points) must be equal to points"
+        assert len(self.points) == self.qpoints, f"len(points) must be equal to qpoints"
 
         # Create grid with states (0, 0, 0)
         # (0, 0, 0) means empty tile
         self.grid = [[(0, 0, 0) for _ in range(cols)] for _ in range(rows)]
-        # Set starting points
+        # Set points
         self._initialize_grid()
 
         self.paths = [[]] * (self.points + 1)
@@ -71,30 +67,30 @@ class Grid:
         """
         return random.randint(0, self.rows - 1), random.randint(0, self.cols - 1)
 
-    def _randomize_starting_points(self) -> None:
-        """Randomize starting points. Only called if starting_points is not given"""
+    def _randomize_points(self) -> None:
+        """Randomize points. Only called if points is not given"""
 
         for i in range(self.points):
-            self.starting_points.append([])
-            for _ in range(2):  # 2 starting points per ith-point
+            self.points.append([])
+            for _ in range(2):  # 2 points per ith-color
                 row, col = self._randomize_point()
-                while (row, col) in self._starting_points_set:
+                while (row, col) in self._points_set:
                     row, col = self._randomize_point()
-                self._starting_points_set.add((row, col))
-                self.starting_points[i] += [(row, col)]
+                self._points_set.add((row, col))
+                self.points[i] += [(row, col)]
 
     def _initialize_grid(self) -> None:
-        """Initialize the grid with the starting points"""
+        """Initialize the grid with the points"""
 
         for i in range(self.points):
-            for row, col in self.starting_points[i]:
-                # The state of the starting points is the index of the point
+            for row, col in self.points[i]:
+                # The state of the points is the index of the point
                 # representing the color and 0, 0
                 self.grid[row][col] = (i + 1, 0, 0)
 
     def progress(self) -> float:
         """Calculates the progress of the grid. Progress is defined as the number of
-        of non-starting cells that have a point.
+        of non-point cells that have a path.
 
         Returns:
             float: progress of the grid between 0 and 1
@@ -103,9 +99,7 @@ class Grid:
         progress = 0
         for row in range(self.rows):
             for col in range(self.cols):
-                if (row, col) not in self._starting_points_set and (
-                    self.grid[row][col] != 0
-                ):
+                if (row, col) not in self._points_set and (self.grid[row][col] != 0):
                     progress += 1
         return progress / (self.rows * self.cols - 2 * self.points)
 
@@ -124,7 +118,7 @@ class Grid:
             return False
         return 0 <= row < self.rows and 0 <= col < self.cols
 
-    def position_of(self, point1: tuple[int, int], point2: tuple[int, int]) -> int:
+    def _position_of(self, point1: tuple[int, int], point2: tuple[int, int]) -> int:
         """Calculates the position of point2 relative to point1. They are expected to
         be adjacent but never the same cell.
 
@@ -149,7 +143,7 @@ class Grid:
             else:
                 return 1
 
-    def are_adjacent(self, point1: tuple[int, int], point2: tuple[int, int]) -> bool:
+    def _are_adjacent(self, point1: tuple[int, int], point2: tuple[int, int]) -> bool:
         """Checks if point1 and point2 are adjacent
 
         Args:
@@ -164,13 +158,56 @@ class Grid:
         row2, col2 = point2
         return abs(row1 - row2) + abs(col1 - col2) == 1
 
+    def _state_is_point(self, state: tuple[int, int, int]) -> bool:
+        """Checks if the given state is a point
+
+        Args:
+            state (tuple[int, int, int]): state to check
+
+        Returns:
+            bool: True if the state is a point, False otherwise
+        """
+
+        return state[1] == 0 or state[2] == 0
+
+    def _restart_path_until_size(self, size: int = 0) -> None:
+        """Restart the current path until it has the given size
+
+        Args:
+            size (int, optional): size of the path. Defaults to 0.
+        """
+
+        while len(self.paths(self._current_path)) > size:
+            r, c = self.paths(self._current_path).pop()
+            # Mark the cells as empty, except the points
+            if self._state_is_point(self.grid[r][c]):
+                self.grid[r][c] = (0, 0, 0)
+            else:
+                self.grid[r][c] = (self._current_path, 0, 0)
+
+    def _restart_path_until_cell(self, row: int, col: int) -> None:
+        """Restart the current path until it reaches the given cell
+
+        Args:
+            row (int): row of the cell
+            col (int): column of the cell
+        """
+
+        while self.paths(self._current_path)[-1] != (row, col):
+            r, c = self.paths(self._current_path).pop()
+            # Mark the cells as empty, except the points
+            if self._state_is_point(self.grid[r][c]):
+                self.grid[r][c] = (0, 0, 0)
+            else:
+                self.grid[r][c] = (self._current_path, 0, 0)
+
     def start_path(self, row: int = None, col: int = None) -> None:
         """Starts a path from the given cell:
         - If the cell is empty / isn't valid, it does nothing.
-        - If the cell is a starting point, it starts a path of that color.
-        - If the cell is a non-starting color, it continues the path
-        from the given cell. That is, it restarts the path from the
-        starting point up to the given cell.
+        - If the cell is a point, it starts a path of that color.
+        - If the cell is a non-point color, it continues the path
+          from the given cell. That is, it restarts the path from the
+          point up to the given cell.
 
         Args:
             row (int, optional): row of the cell where the path is starting.
@@ -191,37 +228,48 @@ class Grid:
         if self.paths[self._current_path] == []:
             self.paths[self._current_path] = [(row, col)]
         # If it's a point, restart the path
-        elif self.grid[row][col][1] == 0:
-            while len(self.paths[self._current_path]) > 1:
-                r, c = self.paths[self._current_path].pop()
-                # Also mark the cells as empty in the grid
-                self.grid[r][c] = (0, 0, 0)
-            # If it's the starting point of the path, mark it as no path
-            if self.paths[self._current_path][0] == (row, col):
-                self.grid[row][col] = (self._current_path, 0, 0)
-            # Else, it's the other point, so restart the path
-            else:
-                r, c = self.paths[self._current_path].pop()
-                self.grid[r][c] = (self._current_path, 0, 0)
-                self.paths[self._current_path] = [(row, col)]
+        elif self._state_is_point(self.grid[row][col]):
+            self._restart_path_until_size()
+            self.paths = [(row, col)]
         # Else, continue the path from the given cell
         else:
-            # Remove all path cells after the given cell
-            while self.paths[self._current_path][-1] != (row, col):
-                r, c = self.paths[self._current_path].pop()
-                # Also mark the cell as empty in the grid (only if it isn't a point)
-                if self.grid[r][c][1] != 0:
-                    self.grid[r][c] = (0, 0, 0)
+            # Restart the path until the given cell
+            self._restart_path_until_cell(row, col)
             # Update the state of the cell so that it ends the current path
-            position_last_cell = self.position_of(
-                (row, col), self.paths[self._current_path][-2]
-            )
-            self.grid[row][col] = (self._current_path, position_last_cell, 5)
+            pos = self._position_of((row, col), self.paths[self._current_path][-2])
+            self.grid[row][col] = (self._current_path, pos, 5)
+
+    def end_path(self) -> None:
+        """Ends the current path."""
+
+        self._is_pathing = False
+        self._current_path = None
+
+    def _move_to_cell(self, row: int, col: int) -> None:
+        """Adds the given cell to the current path.
+
+        Args:
+            row (int): row of the cell
+            col (int): column of the cell
+        """
+
+        # Update the state of the previous last cell so that it continues
+        # the path to the new cell
+        r, c = self.paths[self._current_path][-1]
+        last_pos = self.grid[r][c][1]
+        new_pos = self._position_of((r, c), (row, col))
+        self.grid[r][c] = (self._current_path, last_pos, new_pos)
+        if self._state_is_point(self.grid[row][col]):
+            self.grid[row][col] = (self._current_path, new_pos, 0)
+        else:
+            self.grid[row][col] = (self._current_path, new_pos, 5)
+        # Add the new cell to the path
+        self.paths[self._current_path] += [(row, col)]
 
     def move(self, row: int = None, col: int = None) -> None:
-        """Moves the path to the given cell.
+        """Moves the current path to the given cell.
         - If the cell is valid and adjacent to the last path cell,
-        it adds the cell to the path.
+          it adds the cell to the path.
         - Otherwise, it does nothing.
 
         Args:
@@ -235,58 +283,36 @@ class Grid:
             return
         if not self._is_valid_cell(row, col):
             return
-        if (
-            self.grid[row][col] != (0, 0, 0)
-            and self.grid[row][col][0] != self._current_path
+        # Can only move to empty cells
+        # or second to last cell in path (to backtrack)
+        if self.grid[row][col] != (0, 0, 0) and self.paths(self._current_path)[-2] != (
+            row,
+            col,
         ):
             return
-        if not self.are_adjacent(self.paths[self._current_path][-1], (row, col)):
+        if not self._are_adjacent(self.paths[self._current_path][-1], (row, col)):
             return
 
         # If the cell is the other point, end the path
-        r0, c0 = self.paths[self._current_path][0]
-        if self.grid[row][col] == (self._current_path, 0, 0) and (r0, c0) != (row, col):
-            # Update the state of the previous last cell so that it
-            # continues the path to the new cell
-            r, c = self.paths[self._current_path][-1]
-            last_pos = self.grid[r][c][1]
-            new_pos = self.position_of((r, c), (row, col))
-            self.grid[r][c] = (self._current_path, last_pos, new_pos)
-            # Add the new cell to the path, updated its state and end the path
-            self.paths[self._current_path].append((row, col))
-            self.grid[row][col] = (self._current_path, 0, new_pos)
+        if self.grid[row][col] == (self._current_path, 0, 0):
+            # Continue the path to the new cell and end it
+            self._move_to_cell(row, col)
             self.end_path()
-        # If the cell is the same color as the path, backtrack
-        elif self.grid[row][col][0] == self._current_path:
+        # If the cell is the second to last of the current path, backtrack
+        elif self.paths(self._current_path)[-2] == (row, col):
             r, c = self.paths[self._current_path].pop()
             # Mark the last cell as empty in the grid
             self.grid[r][c] = (0, 0, 0)
-            # If the new last cell is the starting point, mark it as no path
+            # If the new last cell is a point, mark it as no path
             if len(self.paths[self._current_path]) == 1:
                 r, c = self.paths[self._current_path][0]
                 self.grid[r][c] = (self._current_path, 0, 0)
             # Else, mark it as the end of the path
             else:
                 r, c = self.paths[self._current_path][-1]
-                position_last_cell = self.position_of(
-                    (r, c), self.paths[self._current_path][-2]
-                )
-                self.grid[r][c] = (self._current_path, position_last_cell, 5)
+                pos = self._position_of((r, c), self.paths[self._current_path][-2])
+                self.grid[r][c] = (self._current_path, pos, 5)
+        # Else, add the cell to the path
         else:
-            # Update the state of the previous last cell so that it continues
-            # the path to the new cell
-            r, c = self.paths[self._current_path][-1]
-            last_pos = self.grid[r][c][1]
-            new_pos = self.position_of((r, c), (row, col))
-            self.grid[r][c] = (self._current_path, last_pos, new_pos)
-            # Add the new cell to the path and update its state
-            self.paths[self._current_path].append((row, col))
-            self.grid[row][col] = (self._current_path, new_pos, 5)
-
-    def end_path(self) -> None:
-        """Ends the current path."""
-
-        if not self._is_pathing:
-            return
-        self._is_pathing = False
-        self._current_path = None
+            # Continue the path to the new cell
+            self._move_to_cell(row, col)
