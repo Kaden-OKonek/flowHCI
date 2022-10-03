@@ -1,13 +1,10 @@
-import os
+import os, argparse, sys
 import pygame as pg
 import pygame.freetype as pgft
 
 from utils.values import *
 from utils.utils import *
 from grid import Grid
-
-pg.init()
-pg.font.init()
 
 # GLOBAL DEFINITIONS
 
@@ -21,22 +18,14 @@ TILE_SIZE = 42
 
 # Fonts configuration
 FONT_SIZE = 20
-GAME_FONT = pgft.Font(
-    os.path.join(ASSETS_DIR, "fonts", "Roboto-Regular.ttf"), FONT_SIZE
-)
 
-# Display initialization
+# Display configuration
 MARGIN = 16
 WIDTH = TILE_SIZE * MAX_GRID_N + MARGIN * 2
 HEIGHT = TILE_SIZE * MAX_GRID_N + MARGIN * 3 + FONT_SIZE
 WINDOW_SIZE = (WIDTH, HEIGHT)
 
-# Window and clock
-window = pg.display.set_mode(WINDOW_SIZE)
-pg.display.set_caption("Flow")
-
 FPS = 60
-clock = pg.time.Clock()
 
 
 def load_tiles():
@@ -76,16 +65,16 @@ def load_tiles():
 
 
 class Tile(pg.sprite.Sprite):
-    def __init__(self, tiles: dict, row: int, col: int, colors: list, color: int = 0):
+    def __init__(
+        self, tiles: dict, row: int, col: int, color: int = 0, color_str: str = "empty"
+    ):
         super().__init__()
 
         self.tiles = tiles
         self.row = row
         self.col = col
-        self.color_str = colors[color]
+        self.color_str = color_str
         self.state = (color, 0, 0)
-
-        self.is_point = True if color != 0 else False
 
         self.update()
 
@@ -96,20 +85,49 @@ class Tile(pg.sprite.Sprite):
         self.rect.y = self.row * TILE_SIZE + FONT_SIZE + MARGIN * 2
 
 
-def main():
+def main(args):
+    try:
+        levels = load_grid_config(os.path.join(DATA_DIR, "levels.json"))
+    except Exception as e:
+        print(e)
+        sys.exit(1)
+
+    if args.file:
+        try:
+            grid_config = load_grid_config(args.file)
+        except Exception as e:
+            print(e)
+            sys.exit(1)
+    else:
+        if args.level < 1 or args.level > len(levels):
+            print("Level not found")
+            sys.exit(1)
+        grid_config = levels[args.level - 1]
+
+    # PYGAME INITIALIZATION
+    pg.init()
+    pg.font.init()
+    #   Window and clock
+    window = pg.display.set_mode(WINDOW_SIZE)
+    pg.display.set_caption("Flow")
+    clock = pg.time.Clock()
+    #   Fonts
+    GAME_FONT = pgft.Font(
+        os.path.join(ASSETS_DIR, "fonts", "Roboto-Regular.ttf"), FONT_SIZE
+    )
+    #   Tiles sprites
     tiles = load_tiles()
-    levels = load_levels(os.path.join(DATA_DIR, "levels.json"))
-    colors = randomize_colors(list(COLORS.keys()), 5)
 
-    grid = Grid.from_dict(levels[0])
+    grid = Grid.from_config(grid_config)
+    colors = randomize_colors(list(COLORS.keys()), grid_config["qpoints"])
+
     grid_gui = []
-    for row in range(5):
+    for row in range(grid_config["rows"]):
         grid_gui.append([])
-        for col in range(5):
-            grid_gui[row].append(Tile(tiles, row, col, colors, grid[row, col][0]))
-
-    global window
-    global clock
+        for col in range(grid_config["cols"]):
+            grid_gui[row].append(
+                Tile(tiles, row, col, grid[row, col][0], colors[grid[row, col][0]])
+            )
 
     # Game loop
     while True:
@@ -130,15 +148,15 @@ def main():
                 col = (pos[0] - MARGIN) // TILE_SIZE
                 grid.move_path(row, col)
 
-        for row in range(5):
-            for col in range(5):
+        for row in range(grid_config["rows"]):
+            for col in range(grid_config["cols"]):
                 grid_gui[row][col].state = grid[row, col]
                 grid_gui[row][col].color_str = colors[grid[row, col][0]]
                 grid_gui[row][col].update()
 
         window.fill((0, 0, 0))
-        for row in range(5):
-            for col in range(5):
+        for row in range(grid_config["rows"]):
+            for col in range(grid_config["cols"]):
                 window.blit(grid_gui[row][col].image, grid_gui[row][col].rect)
         # render grid.progress() as text below the grid
         text_surface, rect = GAME_FONT.render(
@@ -155,4 +173,24 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # Args parser
+    parser = argparse.ArgumentParser()
+    # Only of the following arguments can be used
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "-f",
+        "--file",
+        help="Path to grid configuration file",
+        type=str,
+        default=None,
+    )
+    group.add_argument(
+        "-l",
+        "--level",
+        help="Level number",
+        type=int,
+        default=1,
+    )
+
+    args = parser.parse_args()
+    main(args)

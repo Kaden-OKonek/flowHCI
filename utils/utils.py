@@ -46,8 +46,10 @@ def randomize_colors(colors: list, quantity: int) -> list:
     return ["empty"] + colors[:quantity]
 
 
-def load_levels(file: str) -> list:
-    """Loads levels from a JSON file.
+def load_grid_config(file: str) -> list | dict:
+    """Loads a grid configuration JSON file. If the file is an array,
+    it is the levels configuration. If the file is an object, it is
+    a single grid configuration.
 
     Args:
         file (str): path to the JSON file
@@ -56,12 +58,12 @@ def load_levels(file: str) -> list:
         Exception: if the file is not found or cannot be loaded
 
     Returns:
-        list: list of levels
+        list | dict: list of levels or dictionary of grid configuration
     """
 
     try:
         file = open(file, "r")
     except FileNotFoundError as message:
-        print("Cannot load levels:", file)
+        print("Cannot load:", file)
         raise Exception(message)
     return json.load(file)

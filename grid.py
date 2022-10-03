@@ -54,8 +54,8 @@ class Grid:
         # Tracks how many moves have been played
         self.moves = 0
 
-    def from_dict(data: dict) -> Grid:
-        """Creates a grid from a dictionary.
+    def from_config(data: dict) -> Grid:
+        """Creates a grid from a dictionary configuration.
 
         Args:
             data (dict): dictionary with the same keys as the constructor
