@@ -125,11 +125,14 @@ class Grid:
         """
 
         progress = 0
-        for row in range(self.rows):
-            for col in range(self.cols):
-                if self.grid[row][col][1:] != (0, 0):
-                    progress += 1
+        for path in self.paths:
+            progress += len(path)
         return progress / (self.rows * self.cols)
+        # for row in range(self.rows):
+        #    for col in range(self.cols):
+        #        if self.grid[row][col][1:] != (0, 0):
+        #            progress += 1
+        # return progress / (self.rows * self.cols)
 
     def _is_valid_cell(self, row: int, col: int) -> bool:
         """Checks if the given cell is valid
@@ -324,8 +327,7 @@ class Grid:
         # Can't move to itself
         if self.paths[self._current_path][-1] == (row, col):
             return
-        # Can move to empty cells
-        # or the other point
+        # Can move to empty cells or the other point
         if self.grid[row][col] == (0, 0, 0) or self.grid[row][col] == (
             self._current_path,
             0,
@@ -341,16 +343,16 @@ class Grid:
         else:
             return
 
-        # If the cell is the other point, end the path
-        if self.grid[row][col] == (self._current_path, 0, 0):
-            # Continue the path to the new cell and end it
-            self._move_to_cell(row, col)
-            self.end_path()
-        elif len(self.paths[self._current_path]) > 1:
+        # If there is a path of the current cell
+        if len(self.paths[self._current_path]) > 1:
             # If the cell is the second to last of the current path, backtrack
             if self.paths[self._current_path][-2] == (row, col):
                 r, c = self.paths[self._current_path].pop()
-                self.grid[r][c] = (0, 0, 0)
+                # Mark the cell as empty, except the points
+                if not self._cell_is_point(r, c):
+                    self.grid[r][c] = (0, 0, 0)
+                else:
+                    self.grid[r][c] = (self._current_path, 0, 0)
                 # If the new last cell is a point, mark it as no path
                 if len(self.paths[self._current_path]) == 1:
                     r, c = self.paths[self._current_path][0]
@@ -360,6 +362,9 @@ class Grid:
                     r, c = self.paths[self._current_path][-1]
                     pos = self._position_of((r, c), self.paths[self._current_path][-2])
                     self.grid[r][c] = (self._current_path, pos, 5)
+            # If the last cell in path is a point, do nothing
+            elif self._cell_is_point(*self.paths[self._current_path][-1]):
+                return
             # Else, add the cell to the path
             else:
                 self._move_to_cell(row, col)
