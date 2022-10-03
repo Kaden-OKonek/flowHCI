@@ -1,4 +1,6 @@
 import os, argparse, sys
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 import pygame as pg
 import pygame.freetype as pgft
 
@@ -66,20 +68,20 @@ def load_tiles():
 
 class Tile(pg.sprite.Sprite):
     def __init__(
-        self, tiles: dict, row: int, col: int, color: int = 0, color_str: str = "empty"
+        self, tiles: dict, colors: list, row: int, col: int, state: tuple = (0, 0, 0)
     ):
         super().__init__()
 
         self.tiles = tiles
+        self.colors = colors
         self.row = row
         self.col = col
-        self.color_str = color_str
-        self.state = (color, 0, 0)
+        self.state = state
 
         self.update()
 
     def update(self):
-        self.image = self.tiles[self.color_str][self.state[1:]]
+        self.image = self.tiles[self.colors[self.state[0]]][self.state[1:]]
         self.rect = self.image.get_rect()
         self.rect.x = self.col * TILE_SIZE + MARGIN
         self.rect.y = self.row * TILE_SIZE + FONT_SIZE + MARGIN * 2
@@ -98,11 +100,26 @@ def main(args):
         except Exception as e:
             print(e)
             sys.exit(1)
-    else:
+    elif args.level:
         if args.level < 1 or args.level > len(levels):
             print("Level not found")
             sys.exit(1)
         grid_config = levels[args.level - 1]
+    elif args.random:
+        if args.rows and args.cols and args.points:
+            try:
+                grid_config = Grid.create_random_config(
+                    args.rows, args.cols, args.points
+                )
+            except Exception as e:
+                print("Can't create random grid:", e)
+                sys.exit(1)
+        else:
+            print("Random grid needs rows, cols and points")
+            sys.exit(1)
+
+    grid = Grid.from_config(grid_config)
+    print("Loaded configuration correctly")
 
     # PYGAME INITIALIZATION
     pg.init()
@@ -118,23 +135,21 @@ def main(args):
     #   Tiles sprites
     tiles = load_tiles()
 
-    grid = Grid.from_config(grid_config)
-    colors = randomize_colors(list(COLORS.keys()), grid_config["qpoints"])
-
+    colors = randomize_colors(list(COLORS.keys()), grid.qpoints)
     grid_gui = []
-    for row in range(grid_config["rows"]):
+    for row in range(grid.rows):
         grid_gui.append([])
-        for col in range(grid_config["cols"]):
-            grid_gui[row].append(
-                Tile(tiles, row, col, grid[row, col][0], colors[grid[row, col][0]])
-            )
+        for col in range(grid.cols):
+            grid_gui[row].append(Tile(tiles, colors, row, col, grid[row, col]))
+    print("Press 'R' to restart the grid")
 
     # Game loop
     while True:
+        # Events
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
-                exit()
+                sys.exit(0)
             elif event.type == pg.MOUSEBUTTONDOWN:
                 pos = pg.mouse.get_pos()
                 row = (pos[1] - MARGIN - FONT_SIZE * 2) // TILE_SIZE
@@ -147,49 +162,56 @@ def main(args):
                 row = (pos[1] - MARGIN - FONT_SIZE * 2) // TILE_SIZE
                 col = (pos[0] - MARGIN) // TILE_SIZE
                 grid.move_path(row, col)
+            elif event.type == pg.KEYDOWN:
+                if event.key == pg.K_r:
+                    grid.restart()
 
-        for row in range(grid_config["rows"]):
-            for col in range(grid_config["cols"]):
+        # Update tile states
+        for row in range(grid.rows):
+            for col in range(grid.cols):
                 grid_gui[row][col].state = grid[row, col]
-                grid_gui[row][col].color_str = colors[grid[row, col][0]]
                 grid_gui[row][col].update()
 
+        # Draw to the screen
         window.fill((0, 0, 0))
-        for row in range(grid_config["rows"]):
-            for col in range(grid_config["cols"]):
-                window.blit(grid_gui[row][col].image, grid_gui[row][col].rect)
-        # render grid.progress() as text below the grid
+        # Render the grid progress
         text_surface, rect = GAME_FONT.render(
             f"Progress: {grid.progress():.2%}", (255, 255, 255)
         )
         window.blit(text_surface, (MARGIN, MARGIN))
-        # render grid.moves as text below the progress
+        # Render the number of moves
         text_surface, rect = GAME_FONT.render(f"Moves: {grid.moves}", (255, 255, 255))
         window.blit(text_surface, (WIDTH - rect.width - MARGIN, MARGIN))
+        # Render the grid
+        for row in range(grid.rows):
+            for col in range(grid.cols):
+                window.blit(grid_gui[row][col].image, grid_gui[row][col].rect)
 
         pg.display.flip()
-
         clock.tick(FPS)
 
 
 if __name__ == "__main__":
     # Args parser
     parser = argparse.ArgumentParser()
-    # Only of the following arguments can be used
-    group = parser.add_mutually_exclusive_group()
+
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("-f", "--file", help="path to a grid config file", type=str)
+    group.add_argument("-l", "--level", help="level number of default levels", type=int)
     group.add_argument(
-        "-f",
-        "--file",
-        help="Path to grid configuration file",
-        type=str,
-        default=None,
+        "-r",
+        "--random",
+        help="randomize a grid. If used, the next args should be: rows, cols, points",
+        action="store_true",
     )
-    group.add_argument(
-        "-l",
-        "--level",
-        help="Level number",
-        type=int,
-        default=1,
+    parser.add_argument(
+        "rows", help="number of rows of the random grid", type=int, nargs="?"
+    )
+    parser.add_argument(
+        "cols", help="number of cols of the random grid", type=int, nargs="?"
+    )
+    parser.add_argument(
+        "points", help="quantity of points of the random grid", type=int, nargs="?"
     )
 
     args = parser.parse_args()

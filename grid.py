@@ -12,19 +12,17 @@ class Grid:
     The GUI is supossed to create a grid and then use it to both send new
     moves and print the current state of the grid as a matrix of tiles."""
 
-    def __init__(self, rows: int, cols: int, qpoints: int, points: list = []) -> None:
-        """Initialize a grid with the given rows, cols and points. If points
-        is not empty, it will be used as the points of the grid
+    def __init__(self, rows: int, cols: int, qpoints: int, points: list) -> None:
+        """Initialize a grid with the given rows, cols and points.
 
         Args:
             rows (int): number of rows. Must be between 2 and MAX_GRID_N
             cols (int): number of columns. Must be between 2 and MAX_GRID_N
             qpoints (int): quantity of points. Must be between MIN_POINTS and MAX_POINTS
-            points (list, optional): 2D list of tuples where:
+            points (list): 2D list of tuples where:
                 - list[i] are the i-th points
                 - list[i][0] is (row, col) of the 1st point of i
                 - list[i][1] is (row, col) of the 2nd point of i
-                Initialized at random if not given.
         """
 
         assert (
@@ -32,28 +30,16 @@ class Grid:
         ), f"qpoints must be between {MIN_POINTS} and {MAX_POINTS}"
         assert 2 <= rows <= MAX_GRID_N, f"rows must be between 2 and {MAX_GRID_N}"
         assert 2 <= cols <= MAX_GRID_N, f"cols must be between 2 and {MAX_GRID_N}"
+        assert len(points) == qpoints, f"len(points) must be equal to qpoints"
 
         self.rows = rows
         self.cols = cols
         self.qpoints = qpoints
         self.points = points
-        if self.points == []:
-            self._randomize_points()
 
-        assert len(self.points) == self.qpoints, f"len(points) must be equal to qpoints"
+        self.restart()
 
-        # Create grid with states (0, 0, 0) (empty tiles)
-        self.grid = [[(0, 0, 0) for _ in range(cols)] for _ in range(rows)]
-        # Set points
-        self._initialize_grid()
-
-        self.paths = [[]] * (qpoints + 1)
-        self._is_pathing = False
-        self._current_path = 0
-
-        # Tracks how many moves have been played
-        self.moves = 0
-
+    @staticmethod
     def from_config(data: dict) -> Grid:
         """Creates a grid from a dictionary configuration.
 
@@ -71,6 +57,50 @@ class Grid:
             data["points"],
         )
 
+    @staticmethod
+    def randomize_point(rows: int, cols: int) -> tuple[int, int]:
+        """Calculates a random point position
+
+        Returns:
+            tuple[int, int]: (row, col) of the random point
+        """
+        return random.randint(0, rows - 1), random.randint(0, cols - 1)
+
+    @staticmethod
+    def create_random_config(rows: int, cols: int, qpoints: int) -> dict:
+        """Creates a random configuration with the given rows, cols and qpoints
+
+        Args:
+            rows (int): number of rows
+            cols (int): number of columns
+            qpoints (int): quantity of points
+
+        Returns:
+            dict: dictionary with the same keys as the constructor
+        """
+
+        assert (
+            qpoints <= rows * cols // 2
+        ), f"qpoints must be less or equal to {rows * cols // 2}"
+
+        points = []
+        points_set = set()
+        for i in range(qpoints):
+            points += [[]]
+            for _ in range(2):  # 2 points per ith-color
+                row, col = Grid.randomize_point(rows, cols)
+                while (row, col) in points_set:
+                    row, col = Grid.randomize_point(rows, cols)
+                points_set.add((row, col))
+                points[i] += [[row, col]]
+
+        return {
+            "rows": rows,
+            "cols": cols,
+            "qpoints": qpoints,
+            "points": points,
+        }
+
     def __str__(self) -> str:
         return str(self.grid)
 
@@ -86,26 +116,17 @@ class Grid:
         row, col = tuple
         return self.grid[row][col]
 
-    def _randomize_point(self) -> tuple[int, int]:
-        """Calculates a random point position
+    def restart(self) -> None:
+        """Restarts the grid to its initial configuration."""
 
-        Returns:
-            tuple[int, int]: (row, col) of the random point
-        """
-        return random.randint(0, self.rows - 1), random.randint(0, self.cols - 1)
+        self.grid = [[(0, 0, 0) for _ in range(self.cols)] for _ in range(self.rows)]
+        self._initialize_grid()
 
-    def _randomize_points(self) -> None:
-        """Randomize points. Only called if points is not given"""
+        self._paths = [[]] * (self.qpoints + 1)
+        self._is_pathing = False
+        self._current_path = 0
 
-        points_set = set()
-        for i in range(self.qpoints):
-            self.points += [[]]
-            for _ in range(2):  # 2 points per ith-color
-                row, col = self._randomize_point()
-                while (row, col) in points_set:
-                    row, col = self._randomize_point()
-                points_set.add((row, col))
-                self.points[i] += [[row, col]]
+        self.moves = 0
 
     def _initialize_grid(self) -> None:
         """Initialize the grid with the points"""
@@ -115,24 +136,6 @@ class Grid:
                 # The state of the points is the index of the point
                 # representing the color and 0, 0
                 self.grid[row][col] = (i + 1, 0, 0)
-
-    def progress(self) -> float:
-        """Calculates the progress of the grid. Progress is defined as the number of
-        of cells that have a path divided by the total number of cells.
-
-        Returns:
-            float: progress of the grid between 0 and 1
-        """
-
-        progress = 0
-        for path in self.paths:
-            progress += len(path)
-        return progress / (self.rows * self.cols)
-        # for row in range(self.rows):
-        #    for col in range(self.cols):
-        #        if self.grid[row][col][1:] != (0, 0):
-        #            progress += 1
-        # return progress / (self.rows * self.cols)
 
     def _is_valid_cell(self, row: int, col: int) -> bool:
         """Checks if the given cell is valid
@@ -211,8 +214,8 @@ class Grid:
             size (int, optional): size of the path. Defaults to 0.
         """
 
-        while len(self.paths[self._current_path]) > size:
-            r, c = self.paths[self._current_path].pop()
+        while len(self._paths[self._current_path]) > size:
+            r, c = self._paths[self._current_path].pop()
             # Mark the cells as empty, except the points
             if not self._cell_is_point(r, c):
                 self.grid[r][c] = (0, 0, 0)
@@ -227,8 +230,8 @@ class Grid:
             col (int): column of the cell
         """
 
-        while self.paths[self._current_path][-1] != (row, col):
-            r, c = self.paths[self._current_path].pop()
+        while self._paths[self._current_path][-1] != (row, col):
+            r, c = self._paths[self._current_path].pop()
             # Mark the cells as empty, except the points
             if not self._cell_is_point(r, c):
                 self.grid[r][c] = (0, 0, 0)
@@ -262,17 +265,17 @@ class Grid:
             self.moves += 1
 
         # If there is no path, start a new path
-        if self.paths[self._current_path] == []:
-            self.paths[self._current_path] = [(row, col)]
+        if self._paths[self._current_path] == []:
+            self._paths[self._current_path] = [(row, col)]
         # If it's a point, restart the path
         elif self._cell_is_point(row, col):
             self._restart_path_until_size()
-            self.paths[self._current_path] = [(row, col)]
+            self._paths[self._current_path] = [(row, col)]
         # Else, continue the path from the given cell
         else:
             self._restart_path_until_cell(row, col)
             # Update the state of the cell so that it ends the current path
-            pos = self._position_of((row, col), self.paths[self._current_path][-2])
+            pos = self._position_of((row, col), self._paths[self._current_path][-2])
             self.grid[row][col] = (self._current_path, pos, 5)
 
     def end_path(self) -> None:
@@ -290,7 +293,7 @@ class Grid:
 
         # Update the state of the previous last cell so that it continues
         # the path to the new cell
-        r, c = self.paths[self._current_path][-1]
+        r, c = self._paths[self._current_path][-1]
         last_pos = self.grid[r][c][1]
         new_pos = self._position_of((r, c), (row, col))
         self.grid[r][c] = (self._current_path, last_pos, new_pos)
@@ -301,7 +304,7 @@ class Grid:
         else:
             self.grid[row][col] = (self._current_path, pos, 5)
         # Add the new cell to the path
-        self.paths[self._current_path] += [(row, col)]
+        self._paths[self._current_path] += [(row, col)]
 
     def move_path(self, row: int = None, col: int = None) -> None:
         """Moves the current path to the given cell.
@@ -322,10 +325,10 @@ class Grid:
             return
         if not self._is_valid_cell(row, col):
             return
-        if not self._are_adjacent(self.paths[self._current_path][-1], (row, col)):
+        if not self._are_adjacent(self._paths[self._current_path][-1], (row, col)):
             return
         # Can't move to itself
-        if self.paths[self._current_path][-1] == (row, col):
+        if self._paths[self._current_path][-1] == (row, col):
             return
         # Can move to empty cells or the other point
         if self.grid[row][col] == (0, 0, 0) or self.grid[row][col] == (
@@ -335,8 +338,8 @@ class Grid:
         ):
             pass
         # or to the second to last cell in the path
-        elif len(self.paths[self._current_path]) > 1:
-            if self.paths[self._current_path][-2] == (row, col):
+        elif len(self._paths[self._current_path]) > 1:
+            if self._paths[self._current_path][-2] == (row, col):
                 pass
             else:
                 return
@@ -344,26 +347,26 @@ class Grid:
             return
 
         # If there is a path of the current cell
-        if len(self.paths[self._current_path]) > 1:
+        if len(self._paths[self._current_path]) > 1:
             # If the cell is the second to last of the current path, backtrack
-            if self.paths[self._current_path][-2] == (row, col):
-                r, c = self.paths[self._current_path].pop()
+            if self._paths[self._current_path][-2] == (row, col):
+                r, c = self._paths[self._current_path].pop()
                 # Mark the cell as empty, except the points
                 if not self._cell_is_point(r, c):
                     self.grid[r][c] = (0, 0, 0)
                 else:
                     self.grid[r][c] = (self._current_path, 0, 0)
                 # If the new last cell is a point, mark it as no path
-                if len(self.paths[self._current_path]) == 1:
-                    r, c = self.paths[self._current_path][0]
+                if len(self._paths[self._current_path]) == 1:
+                    r, c = self._paths[self._current_path][0]
                     self.grid[r][c] = (self._current_path, 0, 0)
                 # Else, mark it as the end of the path
                 else:
-                    r, c = self.paths[self._current_path][-1]
-                    pos = self._position_of((r, c), self.paths[self._current_path][-2])
+                    r, c = self._paths[self._current_path][-1]
+                    pos = self._position_of((r, c), self._paths[self._current_path][-2])
                     self.grid[r][c] = (self._current_path, pos, 5)
             # If the last cell in path is a point, do nothing
-            elif self._cell_is_point(*self.paths[self._current_path][-1]):
+            elif self._cell_is_point(*self._paths[self._current_path][-1]):
                 return
             # Else, add the cell to the path
             else:
@@ -371,3 +374,17 @@ class Grid:
         # Else, add the cell to the path
         else:
             self._move_to_cell(row, col)
+
+    def progress(self) -> float:
+        """Calculates the progress of the grid. Progress is defined as the number of
+        of cells that have a path divided by the total number of cells.
+
+        Returns:
+            float: progress of the grid between 0 and 1
+        """
+
+        progress = 0
+        for path in self._paths:
+            if len(path) > 1:
+                progress += len(path)
+        return progress / (self.rows * self.cols)
