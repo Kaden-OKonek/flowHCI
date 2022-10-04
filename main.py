@@ -1,13 +1,10 @@
 import os, argparse, sys
 
-import utils.config as config
-import utils.utils as utils
-from grid import Grid
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
-import eventmanager
-import model
-import view
-import controller
+from components.grid import Grid as Grid
+from components import eventmanager, model, controller, view
+from utils import config, utils
 
 
 def main(args):

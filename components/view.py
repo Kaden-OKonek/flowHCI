@@ -1,13 +1,10 @@
 import os
-
-os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 import pygame as pg
 import pygame.freetype as pgft
 
-import model
-import utils.config as config
-import utils.utils as utils
-from eventmanager import *
+from . import model
+from .eventmanager import *
+from utils import config, utils
 
 
 class Tile(pg.sprite.Sprite):

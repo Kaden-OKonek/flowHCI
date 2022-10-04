@@ -1,6 +1,7 @@
 from __future__ import annotations
 import random
-import utils.config as config
+
+from utils import config
 
 
 class Grid:

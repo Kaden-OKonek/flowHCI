@@ -1,5 +1,5 @@
-from eventmanager import *
-from grid import Grid
+from .eventmanager import *
+from .grid import Grid
 
 
 class GameEngine(Listener):

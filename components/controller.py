@@ -1,7 +1,8 @@
 import pygame as pg
-import model
-from eventmanager import *
-import utils.config as config
+
+from . import model
+from .eventmanager import *
+from utils import config
 
 
 class GameController(Listener):

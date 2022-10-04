@@ -1,5 +1,5 @@
-import pygame as pg
 import os, random, json
+import pygame as pg
 
 from . import config
 
