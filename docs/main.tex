@@ -1,0 +1,458 @@
+\documentclass[letter,12pt]{article}
+
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage[margin=1in]{geometry}
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{dsfont}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx, color}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{mathrsfs}
+% Change bullet of listitem
+\renewcommand{\labelitemi}{$\bullet$}
+% Reduce listitem indentation
+\usepackage{enumitem}
+% Advance dates
+\usepackage{advdate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 1. Title
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\begin{titlepage} % Suppresses headers and footers on the title page
+	
+	\centering % Centre everything on the title page
+	
+	\scshape % Use small caps for all text on the title page
+	
+	\vspace*{\baselineskip} % White space at the top of the page
+	
+	\begin{figure}[ht!]
+    	\centering
+    	\includegraphics[width=0.4\linewidth]{img/PUJ.png}
+    \end{figure}
+    
+    \vspace*{1.5\baselineskip} 
+	
+	%------------------------------------------------
+	%	Title
+	%------------------------------------------------
+	
+	\rule{\textwidth}{1.6pt}\vspace*{-\baselineskip}\vspace*{2pt} % Thick horizontal rule
+	\rule{\textwidth}{0.4pt} % Thin horizontal rule
+	
+	\vspace{0.75\baselineskip} % Whitespace above the title
+	
+	{\LARGE PROYECTO FLOW: \\ PRIMERA ENTREGA \\} % Title
+	
+	\vspace{0.75\baselineskip} % Whitespace below the title
+	
+	\rule{\textwidth}{0.4pt}\vspace*{-\baselineskip}\vspace{3.2pt} % Thin horizontal rule
+	\rule{\textwidth}{1.6pt} % Thick horizontal rule
+	
+	\vspace{2\baselineskip} % Whitespace after the title block
+	
+	%------------------------------------------------
+	%	Subtitle
+	%------------------------------------------------
+	
+	{\scshape\Large
+	Análisis de Algoritmos \\
+	Departamento de Ingeniería de Sistemas \\
+	Pontificia Universidad Javeriana \\
+	}  % Subtitle or further description
+	
+	\vspace*{3\baselineskip} % Whitespace under the subtitle
+	
+	%------------------------------------------------
+	%	Editor(s)
+	%------------------------------------------------
+	
+	Realizado por
+	
+	\vspace{0.5\baselineskip} % Whitespace before the author
+	
+	{\scshape\Large Alejandro Morales Contreras} % Editor list
+	
+	\vspace{1\baselineskip} % Whitespace below the author list
+	
+	\textit{4 de octubre de 2022} % Date
+	
+	\vfill
+	
+\end{titlepage}
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\section{Introducción} \label{introduccion}
+
+El presente pretende servir como documento de diseño y documentación sobre el proyecto del curso de análisis de algoritmos. El proyecto consiste en la implementación de un algoritmo que juegue ``Flow''. Este juego consiste en resolver rompecabezas \emph{numberlink}. Cada rompecabezas consiste en conectar todos los pares de puntos del mismo color dibujando tuberías no intersectables hasta que todo el tablero está ocupado. \par
+
+Para la primera entrega, se propone la elaboración de una interfaz para que un humano pueda interactuar y jugar. Para esta entrega, se propone una interfaz gráfica de usuario. En este documento se presenta entonces el diseño de esta inferfaz (sección \ref{diseño}), se muestran detalles de la implementación (sección \ref{implementacion}) y una breve documentación (sección \ref{documentacion}). \par
+
+\section{Diseño} \label{diseño}
+
+\subsection{Arquitectura del Sistema} \label{diseño:arquitectura}
+
+Para implementar el juego mediante una interfaz gráfica de usuario, se hace necesario definir una arquitectura para diseñar el Sistema. En este caso, se va a utilizar el patrón MVC junto con un mediador de eventos para comunicar los componentes entre sí. En la figura \ref{fig:arquitectura} se presenta la arquitectura del Sistema. \par
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[scale=0.6]{img/mvc.png}
+	\caption{Arquitectura del Sistema}
+	\label{fig:arquitectura}
+\end{figure}
+
+A continuación se presenta una breve descripción de cada uno de los componentes que hacen parte de esta arquitectura.
+
+\subsubsection{Model} \label{diseño:arquitectura:model}
+
+El modelo guarda toda la lógica y estructura del estado del juego. Para lograr esto, se define un \textit{GameEngine} que se encarga de almacenar el estado del juego, así como modificarlo acorde a los eventos de modificación del modelo. Nótese que en el modelo se tiene la clase \textit{Grid}, la cual tiene toda la lógica de cómo funciona el juego. \par
+
+\subsubsection{View} \label{diseño:arquitectura:view}
+
+La vista se encarga de representar el estado actual del juego gráficamente en la pantalla. \textit{GameView} tiene toda la lógica asociada a pintar el modelo cada vez que se recibe un evento de actualización de pantalla. \par
+
+\subsubsection{Controller} \label{diseño:arquitectura:controller}
+
+El controlador se encarga de recibir todas las interacciones del usuario y llevarlas a modificar el modelo. \textit{GameController} tiene la lógica asociada a recibir los eventos de interacción del usuario y transformarlos en eventos de modificación del modelo. \par
+
+\subsubsection{Events} \label{diseño:arquitectura:events}
+
+Mediante los eventos se coordina toda la comunicación entre cada uno de los componentes. El \textit{EventManager} se encarga de manejar la cola de eventos y notificar a todos sus \textit{listeners asociados}. El \textit{Listener} es notificado cada vez que se genera un evento, y también tiene la posibilidad de colocar eventos en la cola. Nótese que \textit{GameEngine}, \textit{GameView} y \textit{GameController} heredan de este. \par
+
+\subsection{Modelo de interacción del Sistema} \label{diseño:interaccion}
+
+La interacción del Sistema y sus componentes está mediada por el manejador de eventos. En general, estos son los eventos de interacción importantes que analizar: \par
+
+\begin{itemize}
+    \item Inicialización, generado al ejecutar por primera vez el juego y el cual se encarga de inicializar todos los componentes del Sistema. 
+    \item Tick, tick del reloj el cual se encarga de avisar a la Vista que debe actualizarse.
+    \item Interacción del usuario, generado cuando el usuario interactúa con el Sistema y modifica el estado del modelo.
+\end{itemize}
+
+A continuación se presenta una breve representación de cada una de estas interacciones. \par
+
+\subsubsection{Inicialización y Tick} \label{diseño:interaccion:inicializacion_tick}
+
+En la figura \ref{fig:interaccion_init_tick} se presenta el modelo de interacción de inicialización y tick del reloj. La inicialización es dirigida por el modelo, el cual crea el evento de inicialización para los otros componentes. Después, entra en un ciclo hasta que el juego acabe que genera continuamente los ticks. La Vista utiliza estos para recuperar el estado del modelo y actualizarse. \par
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[scale=0.6]{img/sd_init_tick.png}
+	\caption{Interacción de inicialización y tick del reloj}
+	\label{fig:interaccion_init_tick}
+\end{figure}
+
+\subsubsection{Interacción del usuario} \label{diseño:interaccion:usuario}
+
+En la figura \ref{fig:interaccion_usuario} se presenta el modelo de interacción del usuario. En general, el usuario interactúa con el controlador, el cual se encarga de traducir esta interacción en un evento de modificación del modelo (estado) del Sistema. \par
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[scale=0.6]{img/sd_user_interaction.png}
+	\caption{Interacción del usuario}
+	\label{fig:interaccion_usuario}
+\end{figure}
+
+\subsection{Lógica del juego} \label{diseño:logica}
+
+Como se mencionó en la sección \ref{diseño:arquitectura:model}, la lógica de cómo funciona el juego está mediada por el \textit{Grid}, el cual hace parte del estado del modelo. Como se vió en la sección \ref{diseño:interaccion:usuario}, la modificación del modelo (y por ende, del estado del juego) está dirigida por las interacciones del usuario. \par
+
+\subsubsection{Representación del tablero} \label{diseño:logica:tablero}
+
+Para empezar, se define el prototipo que modela el \textit{Grid}, presentado en la figura \ref{fig:prototipo_grid}. \par
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[scale=1]{img/cd_grid.png}
+	\caption{Prototipo de \textit{Grid}}
+	\label{fig:prototipo_grid}
+\end{figure}
+
+El tablero se modela a partir de una cantidad de filas (\textit{rows}), una cantidad de columnas (\textit{cols}), una cantidad de puntos (\textit{qpoints}) y el posicionamiento $(row, col)$ de cada par de puntos (\textit{points}). A partir de esta información, es posible construir el tablero (\textit{grid}): una matriz de $rows \times cols$. También se representan los caminos actuales (\textit{paths}): un arreglo de $(row, col)$ para cada punto disponible. \par
+
+Cada celda del tablero es representada con un \textit{estado}, acorde a su color (un número entero) y su interacción (o no) con las demás celdas (dos números enteros de posicionamiento). Para entender el posicionamiento de una celda, véase la figura \ref{fig:posiciones_celda}. \par
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[scale=0.3]{img/cell_positions.png}
+	\caption{Posiciones de una celda}
+	\label{fig:posiciones_celda}
+\end{figure}
+
+Las posiciones cardinales norte, este, sur y oeste de una celda se representan con 1, 2, 3 y 4 respectivamente. Así mismo, el centro de celda puede ser representando con un 0 (inicio / fin) o un 5 (fin parcial). Estas posiciones se utilizan para representar como se posiciona la celda en el tablero. El posicionamiento entonces se refiere a de dónde viene el camino a la celda, y a dónde va el camino desde la celda. \par
+
+Para entender mejor este concepto, supóngase que se tiene un tablero $3 \times 3$ con dos colores (rojo y azul) representados por los enteros 1 y 2 (con 0 como vacío) como el que se presenta en la figura \ref{fig:ejemplo_tablero_inicial}. Nótese en este que el posicionamiento de todas las celdas es $(0, 0)$, lo cual significa que no se han movido o no están conectadas por ningún camino. \par
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[scale=0.35]{img/example_grid_initial.png}
+	\caption{Ejemplo de un tablero inicial}
+	\label{fig:ejemplo_tablero_inicial}
+\end{figure}
+
+Tracemos un primer camino para el color rojo, desde su punto ubicado en la esquina superior izquierda como el que se presenta en la figura \ref{fig:ejemplo_tablero_mov1}. Nótese que el punto rojo ahora está representado como $(0,3)$, indicando que es un punto inicial que va hacia el sur. La última celda del camino rojo es $(3,5)$, indicando que un camino llega por el sur y se queda en el centro de la celda. \par
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[scale=0.35]{img/example_grid_mov1.png}
+	\caption{Ejemplo de un tablero primer movimiento}
+	\label{fig:ejemplo_tablero_mov1}
+\end{figure}
+
+Un segundo camino para el color azul que conecta ambos puntos se presenta en la figura \ref{fig:ejemplo_tablero_mov2}. Nótese que el punto inicial es $(0,2)$ y el punto final es $(4,0)$, representando este último que un camino llega desde el oeste y termina en este punto. \par
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[scale=0.35]{img/example_grid_mov2.png}
+	\caption{Ejemplo de un tablero segundo movimiento}
+	\label{fig:ejemplo_tablero_mov2}
+\end{figure}
+
+\subsubsection{Interacción con el tablero} \label{diseño:logica:interaccion}
+
+La interacción del usuario con el tablero se compone de 3 operaciones principales: \par
+
+\begin{itemize}
+    \item Iniciar un camino: el usuario hace un primer click sobre una celda que no está vacía. Esta interacción inicia un camino con el color de la celda sobre la que se para.
+    \item Continuar un camino: el usuario continúa su click, moviendo el mouse por distintas celdas del tablero. Esta interacción continúa el camino del mismo color creado en el paso anterior.
+    \item Terminar un camino: el usuario levanta el click. Esta interacción termina el camino que había sido iniciado.
+\end{itemize}
+
+\subsubsection{Iniciar un camino} \label{diseño:logica:iniciar}
+
+En la figura \ref{fig:iniciar_camino} se presenta un flujograma con la lógica del juego al iniciar un camino. \par
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[scale=0.7]{img/fc_start_path.png}
+	\caption{Flujograma de iniciar un camino}
+	\label{fig:iniciar_camino}
+\end{figure}
+
+\subsubsection{Continuar un camino} \label{diseño:logica:continuar}
+
+En la figura \ref{fig:continuar_camino} se presenta un flujograma con la lógica del juego al continuar un camino. \par
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[scale=0.7]{img/fc_continue_path.png}
+	\caption{Flujograma de continuar un camino}
+	\label{fig:continuar_camino}
+\end{figure}
+
+\subsubsection{Terminar un camino} \label{diseño:logica:terminar}
+
+En la figura \ref{fig:terminar_camino} se presenta un flujograma con la lógica del juego al terminar un camino. \par
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[scale=0.7]{img/fc_end_path.png}
+	\caption{Flujograma de terminar un camino}
+	\label{fig:terminar_camino}
+\end{figure}
+
+\section{Implementación} \label{implementacion}
+
+El juego se desarrolla en Python v3.10. Para la implementación de las interfaces gráficas, se hace uso de la librería PyGame v2.1.2, la cual cuenta con múltiples módulos para facilitar la creación de videojuegos en Python. La implementación se hace acorde a la arquitectura definida en la sección \ref{diseño:arquitectura}, con el uso de la librería PyGame en la vista y el controlador. \par
+
+\subsection{Vista previa del juego} \label{implementacion:vista_previa}
+
+Una vista previa del juego se presenta en la figura \ref{fig:vista_previa}. \par
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[scale=0.5]{img/game_preview.png}
+	\caption{Vista previa del juego}
+	\label{fig:vista_previa}
+\end{figure}
+
+\subsection{Funcionalidades del Sistema} \label{implementacion:funcionalidades}
+
+Antes de empezar, el usuario tiene la posibilidad de: \par
+
+\begin{itemize}
+    \item Iniciar un juego con un tablero de niveles predeterminados
+    \item Iniciar un juego con un tablero proporcionado en un archivo
+    \item Iniciar un juego con un tablero creado al azar
+\end{itemize}
+
+Durante el juego, el usuario puede: \par
+
+\begin{itemize}
+    \item Crear caminos manteniendo presionado con el click derecho o izquierdo del mouse
+    \item Reiniciar el tablero presionando la tecla R
+    \item Ver en todo momento el progreso y cantidad de movimientos
+\end{itemize}
+
+\subsection{Restricciones del Sistema} \label{implementacion:restricciones}
+
+Se definen las siguientes restricciones: \par
+
+\begin{itemize}
+    \item La cantidad mínima de puntos es 2 y la cantidad máxima es 16
+    \item El tablero mínimo es de $2 \times 2$ y el máximo es de $15 \times 15$
+\end{itemize}
+
+\subsection{Configuración de los tableros} \label{implementacion:configuracion}
+
+Como se mencionó en la sección \ref{implementacion:funcionalidades}, existen múltiples formas de iniciar un juego. Todas estas dependen de una configuración del tablero, la cual se representa como un diccionario en Python que contiene los mismos datos para representar un tablero (ver sección \ref{diseño:logica:tablero}). Por ejemplo, el mismo tablero inicial de la figura \ref{fig:ejemplo_tablero_inicial} es representado por la siguiente configuración: \par
+
+\begin{verbatim}
+{
+   "rows": 3,
+   "cols": 3,
+   "qpoints": 2,
+   "points": [
+        [
+            [0, 0], [1, 2]
+        ],
+        [
+            [2, 0], [2, 2]
+        ]
+   ]
+}
+\end{verbatim}
+
+Así mismo, esta configuración puede venir de niveles predeterminados, de un archivo o ser creada al azar. \par
+
+\subsubsection{Tableros de niveles predeterminados} \label{implementacion:configuracion:niveles}
+
+El juego viene con unos niveles predeterminados definidos dentro de un archivo JSON. Estos niveles aseguran que es posible ganar y existe una única solución. Refiérase a la sección \ref{documentacion:ejecucion:niveles} para ver como ejecutarlos. \par
+
+\subsubsection{Tableros por archivos} \label{implementacion:configuracion:archivos}
+
+Es posible definir una configuración similar a la presentada anteriormente dentro de un archivo JSON para proceder a jugar dicho tablero. Sin embargo, no es posible asegurar que se puede ganar. Refiérase a la sección \ref{documentacion:ejecucion:archivos} para ver como ejecutarlos. \par
+
+\subsubsection{Tableros al azar} \label{implementacion:configuracion:azar}
+
+Es posible definir una cantidad arbitraria de filas, columnas y puntos para que el juego genere un tablero al azar y poder proceder a jugarlo. Sin embargo, no es posible asegurar que se puede ganar. Refiérase a la sección \ref{documentacion:ejecucion:azar} para ver como ejecutarlos. \par
+
+\section{Documentación} \label{documentacion}
+
+\subsection{Compilación} \label{documentacion:compilacion}
+
+\subsubsection{Requisitos previos} \label{documentacion:compilacion:requisitos}
+
+La máquina debe contar con la versión de Python 3.10 o superior.
+
+\subsubsection{Windows} \label{documentacion:compilacion:windows}
+
+Clonar el repositorio donde se aloja el código
+
+\begin{verbatim}
+> git clone https://github.com/amoralesc/flow.git
+> cd flow
+\end{verbatim}
+
+Crear un entorno virtual para instalar las dependencias
+
+\begin{verbatim}
+> python -m venv venv
+\end{verbatim}
+
+(Opcional) Activar los permisos de ejecución de scripts
+
+\begin{verbatim}
+> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+\end{verbatim}
+
+Activar el entorno virtual
+
+\begin{verbatim}
+> venv\Scripts\activate
+\end{verbatim}
+
+Instalar las dependencias
+
+\begin{verbatim}
+> pip install -r requirements.txt
+\end{verbatim}
+
+\subsubsection{Linux / Mac} \label{documentacion:compilacion:linux}
+
+Clonar el repositorio donde se aloja el código
+
+\begin{verbatim}
+$ git clone https://github.com/amoralesc/flow.git
+$ cd flow
+\end{verbatim}
+
+Crear un entorno virtual para instalar las dependencias
+
+\begin{verbatim}
+$ python -m venv venv
+\end{verbatim}
+
+Activar el entorno virtual
+
+\begin{verbatim}
+$ source venv/bin/activate
+\end{verbatim}
+
+Instalar las dependencias
+
+\begin{verbatim}
+$ pip install -r requirements.txt
+\end{verbatim}
+
+\subsection{Ejecución} \label{documentacion:ejecucion}
+
+Para ver todas las opciones de ejecución posibles: \par
+
+\begin{verbatim}
+$ python main.py -h
+\end{verbatim}
+
+\subsubsection{Tableros de niveles predeterminados} \label{documentacion:ejecucion:niveles}
+
+Para visualizar las configuraciones de tablero de los niveles disponibles: \par
+
+\begin{verbatim}
+$ cat data/levels.json
+\end{verbatim}
+
+Para ejecutar un tablero de un nivel predeterminado: \par
+
+\begin{verbatim}
+$ python main.py -l LEVEL
+\end{verbatim}
+
+donde \textsc{LEVEL} es un entero que representa la posición del nivel en el arreglo de niveles disponibles (indexado desde 1). \par
+
+\subsubsection{Tableros por archivos} \label{documentacion:ejecucion:archivos}
+
+Configurar previamente el tablero siguiendo los lineamientos de \ref{implementacion:configuracion} dentro de un archivo. Para ejecutar el tablero desde un archivo: \par
+
+\begin{verbatim}
+$ python main.py -f FILE
+\end{verbatim}
+
+donde \textsc{FILE} es la ruta hasta el archivo que contiene la configuración del tablero. \par
+
+\subsubsection{Tableros al azar} \label{documentacion:ejecucion:azar}
+
+Para ejecutar un tablero al azar: \par
+
+\begin{verbatim}
+$ python main.py -r ROWS COLS POINTS
+\end{verbatim}
+
+donde \textsc{ROWS}, \textsc{COLS} y \textsc{POINTS} son 3 enteros representando la cantidad de filas, columnas y puntos respectivamente. \par
+
+\subsection{Documentación del código}
+
+El código se encuentra completamente documentado, y es posible referirse a este para entender las distintas partes de la implementación. \par
+
+\end{document}
