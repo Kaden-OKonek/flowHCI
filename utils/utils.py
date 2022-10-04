@@ -1,6 +1,7 @@
 import pygame as pg
-import random
-import json
+import os, random, json
+
+from . import config
 
 
 def load_image(file: str, scale: tuple[int, int] = None) -> pg.Surface:
@@ -28,12 +29,47 @@ def load_image(file: str, scale: tuple[int, int] = None) -> pg.Surface:
     return surface.convert()
 
 
-def randomize_colors(colors: list, quantity: int) -> list:
-    """Chooses a random subset of colors from a list of colors.
+def load_tiles():
+    """Load tiles sprites from assets directory.
+
+    Returns:
+        dict: Tile sprites divided by color. Every color has a state
+        for each tile type.
+    """
+
+    tiles = {}
+    for color in config.COLORS:
+        tiles[color] = {}
+        for state in config.TILE_STATES:
+            s1 = min(state[0], state[1])
+            s2 = max(state[0], state[1])
+
+            tiles[color][state] = load_image(
+                os.path.join(
+                    config.ASSETS_DIR,
+                    "sprites",
+                    "tiles",
+                    color,
+                    f"tile_{s1}{s2}_{color}.png",
+                ),
+                (config.TILE_SIZE, config.TILE_SIZE),
+            )
+    # Empty tile
+    tiles["empty"] = {
+        (0, 0): load_image(
+            os.path.join(config.ASSETS_DIR, "sprites", "tiles", "tile_empty.png"),
+            (config.TILE_SIZE, config.TILE_SIZE),
+        )
+    }
+
+    return tiles
+
+
+def randomize_colors(quantity: int) -> list:
+    """Chooses a random subset of colors from the COLORS names.
     Adds an "empty" color as the first element of the subset.
 
     Args:
-        colors (list): list of color names
         quantity (int): number of colors to choose.
         Excludes the empty color.
 
@@ -41,6 +77,7 @@ def randomize_colors(colors: list, quantity: int) -> list:
         list: chosen list of colors names
     """
 
+    colors = list(config.COLORS.keys())
     random.shuffle(colors)
     # return list with empty color at the start
     return ["empty"] + colors[:quantity]

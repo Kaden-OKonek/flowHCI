@@ -1,11 +1,11 @@
 from __future__ import annotations
 import random
-from utils.values import *
+import utils.config as config
 
 
 class Grid:
     """Represents the grid of a game. It is a rows * size matrix of tuples,
-    where each tuple represents a tile color + state (see utils/values.py
+    where each tuple represents a tile color + state (see utils/config.py
     for the available TILE_STATES).
 
     The grid is more or less the interface that the game interacts with.
@@ -26,10 +26,14 @@ class Grid:
         """
 
         assert (
-            MIN_POINTS <= qpoints <= MAX_POINTS
-        ), f"qpoints must be between {MIN_POINTS} and {MAX_POINTS}"
-        assert 2 <= rows <= MAX_GRID_N, f"rows must be between 2 and {MAX_GRID_N}"
-        assert 2 <= cols <= MAX_GRID_N, f"cols must be between 2 and {MAX_GRID_N}"
+            config.MIN_POINTS <= qpoints <= config.MAX_POINTS
+        ), f"qpoints must be between {config.MIN_POINTS} and {config.MAX_POINTS}"
+        assert (
+            2 <= rows <= config.MAX_GRID_N
+        ), f"rows must be between 2 and {config.MAX_GRID_N}"
+        assert (
+            2 <= cols <= config.MAX_GRID_N
+        ), f"cols must be between 2 and {config.MAX_GRID_N}"
         assert len(points) == qpoints, f"len(points) must be equal to qpoints"
 
         self.rows = rows

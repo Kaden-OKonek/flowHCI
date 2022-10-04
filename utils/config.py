@@ -1,3 +1,10 @@
+import os
+
+# Directories
+BASE_DIR = os.path.split(os.path.split(os.path.abspath(__file__))[0])[0]
+DATA_DIR = os.path.join(BASE_DIR, "data")
+ASSETS_DIR = os.path.join(BASE_DIR, "assets")
+
 # Colors
 COLORS = {
     "white": (255, 255, 255),
@@ -53,3 +60,20 @@ TILE_STATES = [
     (3, 5),  # "down_to_middle",
     (4, 5),  # "left_to_middle",
 ]
+
+# VIEW
+
+# Tiles configuration
+TILE_SIZE = 42
+
+# Fonts configuration
+FONT_SIZE = 20
+FONT_FAMILY = "Roboto-Regular.ttf"
+
+# Display configuration
+MARGIN = 16
+WIDTH = TILE_SIZE * MAX_GRID_N + MARGIN * 2
+HEIGHT = TILE_SIZE * MAX_GRID_N + MARGIN * 3 + FONT_SIZE
+
+TITLE = "Flow"
+FPS = 60
