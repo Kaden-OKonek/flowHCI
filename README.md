@@ -4,6 +4,8 @@ This project is a homage to the [Flow Free game](https://www.bigduckgames.com/fl
 
 <img src="https://raw.githubusercontent.com/amoralesc/flow/main/docs/img/game_preview.png" width="300">
 
+Take a look at the [docs](/docs/main.pdf) for more information about the project.
+
 ## Specifications 📋
 
 The game is developed for computers with a minimum screen resolution of 1024x768. It is developed in Python 3.10 using the PyGame library.
