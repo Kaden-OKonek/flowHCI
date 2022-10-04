@@ -8,13 +8,14 @@ from utils import config, utils
 
 
 class Tile(pg.sprite.Sprite):
+    """A tile that represent a cell in the grid. It can be empty or filled with a color,
+    and can be connected to other tiles. It is the visual representation of the Grid state
+    in the game."""
+
     def __init__(
         self, tiles: dict, colors: list, row: int, col: int, state: tuple = (0, 0, 0)
     ):
-        """A tile that represent a cell in the grid. It can be empty or filled with a color,
-        and can be connected to other tiles. It is the visual representation of the Grid state
-        in the game.
-
+        """
         Args:
             tiles (dict): the tiles sprites
             colors (list): the colors of the tiles
@@ -31,6 +32,8 @@ class Tile(pg.sprite.Sprite):
         self.state = state
 
     def update(self):
+        """Update the tile sprite according to its current state."""
+
         self.image = self.tiles[self.colors[self.state[0]]][self.state[1:]]
         self.rect = self.image.get_rect()
         self.rect.x = self.col * config.TILE_SIZE + config.MARGIN
