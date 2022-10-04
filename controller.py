@@ -4,7 +4,7 @@ from eventmanager import *
 import utils.config as config
 
 
-class Controller(Listener):
+class GameController(Listener):
     """
     Controller that handles user input.
     """

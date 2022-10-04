@@ -32,7 +32,7 @@ class GameEngine(Listener):
         elif isinstance(event, TileReleasedEvent):
             self.grid.end_path()
         elif isinstance(event, TileHoveredEvent):
-            self.grid.move_path(*event.pos)
+            self.grid.continue_path(*event.pos)
         elif isinstance(event, RestartEvent):
             self.grid.restart()
 

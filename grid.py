@@ -310,8 +310,8 @@ class Grid:
         # Add the new cell to the path
         self._paths[self._current_path] += [(row, col)]
 
-    def move_path(self, row: int = None, col: int = None) -> None:
-        """Moves the current path to the given cell.
+    def continue_path(self, row: int = None, col: int = None) -> None:
+        """Continues the current path to the given cell.
         - If the cell is valid and adjacent to the last path cell,
           it adds the cell to the path.
         - If the cell is second to last in the current path, it

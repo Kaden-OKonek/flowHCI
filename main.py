@@ -46,7 +46,7 @@ def main(args):
 
     event_manager = eventmanager.EventManager()
     gamemodel = model.GameEngine(event_manager, grid)
-    gamecontroller = controller.Controller(event_manager, gamemodel)
+    gamecontroller = controller.GameController(event_manager, gamemodel)
     gameview = view.GameView(event_manager, gamemodel)
     gamemodel.run()
 
