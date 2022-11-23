@@ -48,6 +48,7 @@ class GameEngine(Listener):
         self.running = True
         self.event_manager.post(InitEvent())
         print("Press R to restart")
+        print("Press CTRL + C to quit (WARNING: DO NOT USE THE EXIT WINDOW BUTTON)")
         while self.running:
             tick = TickEvent()
             self.event_manager.post(tick)
