@@ -82,10 +82,10 @@ FPS = 60
 
 # Solver configuration
 
-# The sliding window repetition tells the solver how many times
-# the found paths can be repeated in the sequence.
-WINDOW_REPETITION = 3
-
 # The maximum number of repetitions tells the solver how many
 # times it can find repeated paths.
 MAX_REPETITIONS = 500
+
+# The sliding window repetition tells the solver how many times
+# the found paths can be repeated in the sequence.
+WINDOW_REPETITION = 3

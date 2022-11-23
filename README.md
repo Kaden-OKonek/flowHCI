@@ -163,6 +163,47 @@ python main.py -r ROWS COLS QPOINTS
 
 where `ROWS` is the number of rows, `COLS` is the number of columns and `QPOINTS` is the number of points in the grid.
 
+## Solver 🧠
+
+The Flow game is a numberlink-like game. This means that solving the game is an NP-hard problem. However, there are some heuristics that can be used to find an approximate solution to the game.
+
+The solver implemented in this project is a modified version of the [A* algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm). That said, the solver is not guaranteed to find a solution to the grid, even if there is one (or more). 
+
+### Running the solver
+
+To run the solver, accompany any of the above commands with the `-s` flag. For example, to run the solver on the level 1, run the following command:
+
+```bash
+python main.py -l 1 -s
+```
+
+You may also activate debug mode by adding the `-d` flag. This will show the steps taken by the solver to find a solution to the grid.
+
+```bash
+python main.py -l 1 -s -d
+```
+
+### Metrics
+
+Of the current 25 levels, the solver is able to find a solution to 20 of them. It fails to find a solution to the following levels:
+
+- Level 17: 8x8 grid with 6 point-pairs
+- Level 19: 8x8 grid with 7 point-pairs
+- Level 20: 8x8 grid with 6 point-pairs
+- Level 22: 9x9 grid with 8 point-pairs
+- Level 24: 9x9 grid with 7 point-pairs
+
+### Parameters
+
+The solver has a few parameters that can be tweaked to improve the performance of the solver. These parameters are defined in the [config.py](/utils/config.py) file. The parameters are:
+
+- `MAX_REPETITIONS`: maximum number of repeated paths the solver can find for a single point-pair before it backtracks. If the solver does not find a solution after this number of repetitions, it will backtrack to the previous point-pair.
+- `WINDOW_REPETITION`: minimum number of repeated paths the solver must find for a single point-pair before it backtracks. For the example:
+  - paths: 1, 2, 3, 4, 5, 6, 7, 8, 9
+  - current window size: 3
+  - window repetitions: 3
+  - The solver will check if [7, 8, 9] equals [4, 5, 6] and if [4, 5, 6] equals [1, 2, 3]. This is to determine if the current window size is repeated enough times to backtrack.
+
 ## License 📄
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
