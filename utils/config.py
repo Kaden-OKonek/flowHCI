@@ -77,3 +77,15 @@ HEIGHT = TILE_SIZE * MAX_GRID_N + MARGIN * 3 + FONT_SIZE
 
 TITLE = "Flow"
 FPS = 60
+
+# SOLVER
+
+# Solver configuration
+
+# The sliding window repetition tells the solver how many times
+# the found paths can be repeated in the sequence.
+WINDOW_REPETITION = 3
+
+# The maximum number of repetitions tells the solver how many
+# times it can find repeated paths.
+MAX_REPETITIONS = 500

@@ -394,3 +394,25 @@ class Grid:
             if len(path) > 1:
                 progress += len(path)
         return progress / (self.rows * self.cols)
+
+    def add_path(self, path: list[tuple[int, int]]) -> None:
+        """Adds a path to the grid.
+
+        Args:
+            path (list[tuple[int, int]]): list of cells that form the path
+        """
+
+        self.start_path(*path[0])
+        for cell in path[1:]:
+            self._move_to_cell(*cell)
+        self.end_path()
+
+    def remove_path(self, current_path: int) -> None:
+        """Removes a path from the grid.
+
+        Args:
+            current_path (int): index of the path to remove
+        """
+
+        self._current_path = current_path
+        self._restart_path_until_size()
