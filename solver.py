@@ -64,9 +64,12 @@ class Solver:
             [[0 for _ in range(self.grid.cols)] for _ in range(self.grid.rows)]
             for _ in range(self.grid.num_points)
         ]
-        self.ADDED_COST = self.grid.rows * self.grid.cols
         # each point-pair has a dict of tried paths
         self.tried_paths = [{} for _ in range(grid.num_points)]
+
+        self.ADDED_COST = self.grid.rows * self.grid.cols
+        self.REPEATING_WINDOW = 3
+        self.MAX_REPEATS = 1000
 
     def get_neighbors(self, point: int, cell: tuple[int, int]) -> list[tuple[int, int]]:
         """Gets the valid neighbors of a cell.
@@ -132,10 +135,10 @@ class Solver:
         return hash("".join([str(cell) for cell in path]))
 
     def add_costs(self, point: int, path: list[tuple[int, int]]) -> None:
-        """Adds costs to the grid for a point-pair.
+        """Adds costs to the grid for a path.
 
         Args:
-            point (int): The point-pair index
+            point (int): The point-pair index of the path
             path (list[tuple[int, int]]): The path to add costs to"""
 
         for cell in path[1:-1]:
@@ -143,7 +146,7 @@ class Solver:
 
     def solve_point(self, point: int) -> list[tuple[int, int]]:
         """Finds the best path for a point-pair. It does so by using A*.
-        The calculated path is stored in the tried_paths list.
+        The calculated path adds costs to the grid.
 
         Args:
             point (int): The point-pair index to solve
@@ -226,21 +229,49 @@ class Solver:
         self.grid.erase_path(point)
         self.grid.paths[point] = []
 
-    def is_repeating(self, tried_paths: list[int], memory: tuple[int, int]) -> int:
-        """Checks if a sequence of trieds paths is repeating.
+    def is_repeating(self, tried_paths: list[int]) -> bool:
+        """Checks if a sequence of trieds paths is repeating. This is done by
+        executing a sliding window algorithm from size 1 to (1 / REPEATING WINDOW)
+        the length of the sequence. The check is done by comparing if the window
+        occurs REPEATING_WINDOW times at the end of the sequence.
 
         Args:
             tried_paths (list[int]): The list of tried paths
-            memory (tuple[int, int]): The memory (current, start) where current
-            is the current index to check and start is the index where the
-            checking started
 
         Returns:
-            int: The index of the next path to check, or 0 if no path is repeating"""
+            bool: True if the sequence is repeating, False otherwise"""
 
-        if tried_paths[memory[0]] == tried_paths[-1]:
-            return (memory[0] + 1, memory[1])
-        return (0, len(tried_paths))
+        # if the sequence is 1 2 3 4 5 6 7 8 9
+        # REPEATING_WINDOW = 3
+        # and the current window size is 3
+        # then the checked windows will be
+        # 1 2 3 [4 5 6] [7 8 9]
+        # [1 2 3] [4 5 6] 7 8 9
+        # if they are all equal, then the sequence is repeating
+        # otherwise, they sequence is not repeating at the current window size
+
+        if len(tried_paths) < self.REPEATING_WINDOW:
+            return False
+
+        for window_size in range(1, (len(tried_paths) // self.REPEATING_WINDOW) + 1):
+
+            repeating = True
+            for i in range(self.REPEATING_WINDOW - 1):
+                window1 = (
+                    tried_paths[-(i + 1) * window_size :]
+                    if i == 0
+                    else tried_paths[-(i + 1) * window_size : -i * window_size]
+                )
+                window2 = tried_paths[-(i + 2) * window_size : -(i + 1) * window_size]
+
+                if window1 != window2:
+                    repeating = False
+                    break
+
+            if repeating:
+                return True
+
+        return False
 
     def solve(self) -> None:
         """Solves all the point-pairs."""
@@ -249,7 +280,6 @@ class Solver:
         point = 0
 
         print_matrix(self.grid.grid)
-        print_matrix(self.added_costs[point])
 
         while not solved:
             # remove path
@@ -271,7 +301,7 @@ class Solver:
                 # If there is no previous point, there is no solution
                 if point < 0:
                     print("No solution")
-                    return
+                    return False
 
                 continue
 
@@ -280,9 +310,11 @@ class Solver:
             print("Found path", flattened_path)
 
             tried_paths = [flattened_path]
-            memory = (0, 1)
             repeating = False
+            repeats = 0
             while flattened_path in self.tried_paths[point]:
+                repeats += 1
+
                 print("\tPath already tried")
                 print()
                 print("\tContinue solving point", point + 1)
@@ -291,9 +323,8 @@ class Solver:
                 print("\tFound path", flattened_path)
 
                 tried_paths.append(flattened_path)
-                memory = self.is_repeating(tried_paths, memory)
-                if memory[0] == memory[1]:
-                    print("\tPaths are repeating, backtracking")
+                if self.is_repeating(tried_paths) or repeats > self.MAX_REPEATS:
+                    print("\tPath finding is repeating, backtracking")
                     print()
                     self.restart_point(point)
                     point -= 1
@@ -302,8 +333,7 @@ class Solver:
                     # If there is no previous point, there is no solution
                     if point < 0:
                         print("No solution")
-                        return
-
+                        return False
                     break
 
             if repeating:
@@ -317,7 +347,6 @@ class Solver:
             self.grid.draw_path(point)
 
             print_matrix(self.grid.grid)
-            print_matrix(self.added_costs[point])
 
             # Check if the grid is solved
             if self.grid.progress() == 1:
