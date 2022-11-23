@@ -49,7 +49,7 @@
 	
 	\vspace{0.75\baselineskip} % Whitespace above the title
 	
-	{\LARGE PROYECTO FLOW: \\ PRIMERA ENTREGA \\} % Title
+	{\LARGE PROYECTO FLOW: \\ ENTREGA FINAL \\} % Title
 	
 	\vspace{0.75\baselineskip} % Whitespace below the title
 	
@@ -82,7 +82,7 @@
 	
 	\vspace{1\baselineskip} % Whitespace below the author list
 	
-	\textit{4 de octubre de 2022} % Date
+	\textit{24 de noviembre de 2022} % Date
 	
 	\vfill
 	
@@ -98,7 +98,9 @@
 
 El presente pretende servir como documento de diseño y documentación sobre el proyecto del curso de análisis de algoritmos. El proyecto consiste en la implementación de un algoritmo que juegue ``Flow''. Este juego consiste en resolver rompecabezas \emph{numberlink}. Cada rompecabezas consiste en conectar todos los pares de puntos del mismo color dibujando tuberías no intersectables hasta que todo el tablero está ocupado. \par
 
-Para la primera entrega, se propone la elaboración de una interfaz para que un humano pueda interactuar y jugar. Para esta entrega, se propone una interfaz gráfica de usuario. En este documento se presenta entonces el diseño de esta inferfaz (sección \ref{diseño}), se muestran detalles de la implementación (sección \ref{implementacion}) y una breve documentación (sección \ref{documentacion}). \par
+Para la entrega final, se propone la implementación de un algoritmo capaz de resolver el juego. Para esta entrega, se propone un algoritmo de aproximación. En este documento se presenta entonces el diseño de la interfaz (sección \ref{diseño}), se muestran detalles de la implementación (sección \ref{implementacion}), se presenta todo el proceso de análisis de algoritmos (sección \ref{analisis}) y una breve documentación (sección \ref{documentacion}). \par
+
+
 
 \section{Diseño} \label{diseño}
 
@@ -263,6 +265,8 @@ En la figura \ref{fig:terminar_camino} se presenta un flujograma con la lógica 
 	\label{fig:terminar_camino}
 \end{figure}
 
+
+
 \section{Implementación} \label{implementacion}
 
 El juego se desarrolla en Python v3.10. Para la implementación de las interfaces gráficas, se hace uso de la librería PyGame v2.1.2, la cual cuenta con múltiples módulos para facilitar la creación de videojuegos en Python. La implementación se hace acorde a la arquitectura definida en la sección \ref{diseño:arquitectura}, con el uso de la librería PyGame en la vista y el controlador. \par
@@ -273,7 +277,7 @@ Una vista previa del juego se presenta en la figura \ref{fig:vista_previa}. \par
 
 \begin{figure}[ht!]
 	\centering
-	\includegraphics[scale=0.5]{img/game_preview.png}
+	\includegraphics[scale=0.6]{img/game_preview.png}
 	\caption{Vista previa del juego}
 	\label{fig:vista_previa}
 \end{figure}
@@ -338,6 +342,256 @@ Es posible definir una configuración similar a la presentada anteriormente dent
 \subsubsection{Tableros al azar} \label{implementacion:configuracion:azar}
 
 Es posible definir una cantidad arbitraria de filas, columnas y puntos para que el juego genere un tablero al azar y poder proceder a jugarlo. Sin embargo, no es posible asegurar que se puede ganar. Refiérase a la sección \ref{documentacion:ejecucion:azar} para ver como ejecutarlos. \par
+
+\newpage
+
+
+
+\section{Análisis} \label{analisis}
+
+\subsection{Formalización del Problema} \label{analisis:formalizacion}
+
+Sean $n, m \in \mathbb{N}$ números naturales en el rango $[2, 9]$, sea $k \in \mathbb{N}$ un número natural en el rango $[2, 9]$ y sea $P = \langle ~ p_i \in \mathbb{N}^{2 \times 2} ~ | ~ i \in [1, k] \land j \in [1, 2] \land p_i^{[j]} = \langle x_i^{[j]}, y_i^{[j]} \rangle \land x_i \in [1,n] \land y_i \in [1,m] ~ \rangle$ como $k$ pares de puntos; es posible representar $T \in \mathbb{N}^{n \times m}$ una matriz compuesta por números naturales en el rango $0$ a $k$ tales que $T_{x_i^{[j]}, y_i^{[j]}} = i ~ \forall i \in [1, k] ~ \forall j \in [1, 2]$. Esto es, una matriz con las coordenadas dadas por el conjunto de puntos $P$ representadas como un $i$-índice del par de puntos o $0$ cuando no existe la coordenada en $P$. \par
+
+El objetivo del problema es entonces \textit{conectar} todos los pares de puntos sobre el tablero $T$ de tal forma que $T_{x,y} \neq 0 ~ \forall x ~ \forall y$, no exista coordenada vacía en $T$. Así mismo, debe cumplirse que es posible ir desde $p_i^{[1]}$ hacia $p_i^{[2]}$ sobre $T$ para todo $i$. Defínase un vecino de $T_{x,y}$ como una coordenada adyacente a $(x,y)$ en cualquiera de las cuatro direcciones cardinales norte ($T_{x-1,y}$), sur ($T_{x+1,y}$), oeste ($T_{x,y-1}$) o este ($T_{x,y+1}$); siempre y cuando el vecino esté definido en el rango de búsqueda $\mathbb{N}^{n \times m}$. Una manera de determinar que este camino existe es que para todo $T_{x,y}=i$, este posee al menos dos vecinos con su mismo valor $i$ si $(x,y) \notin P$ o un vecino si $(x,y) \in P$. \par
+
+\subsubsection{Definición del Problema ``Flow''} \label{analisis:formalizacion:definicion}
+
+El problema ``Flow'' se define a partir de: \par
+
+\begin{itemize}
+    \item \textbf{Entradas:}
+    \begin{itemize}
+        \item $n \in \mathbb{N} ~ | ~ n \in [2,9]$, una cantidad de filas
+        \item $m \in \mathbb{N} ~ | ~ m \in [2,9]$, una cantidad de columnas
+        \item $k \in \mathbb{N} ~ | ~ k \in [2,9]$, una cantidad de pares de puntos
+        \item $P = \langle ~ p_i \in \mathbb{N}^{2 \times 2} ~ | ~ i \in [1, k] \land j \in [1, 2] \land p_i^{[j]} = \langle x_i^{[j]}, y_i^{[j]} \rangle \land x_i \in [1,n] \land y_i \in [1,m] ~ \rangle$, una secuencia de pares de puntos
+    \end{itemize}
+    \item \textbf{Salidas:}
+    \begin{itemize}
+        \item $T \in \mathbb{N}^{n \times m} ~ | ~ T_{x,y} \in [1, k] ~ \forall x,y \land T_{x,y}$ posee al menos 2 vecinos si $(x,y) \notin P \lor T_{x,y}$ posee 1 vecino si $(x,y) \in P$.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Análisis del problema} \label{analisis:formalizacion:analisis}
+
+Este problema se conoce en la literatura como un rompecabezas tipo \textit{Numberlink}, y se ha comprobado que es un problema de tipo decisión y de clase NP-completo. El algoritmo que lo soluciona ``perfectamente'' es permutativo y dadas las definiciones presentadas en la sección \ref{analisis:formalizacion:definicion}, esta solución tardaría un tiempo demasiado grande (complejidad temporal superpolinomial) en encontrar la solución. Es por esto que se propone abordar el problema mediante un algoritmo de aproximación. \par
+
+\subsection{Algoritmo de Solución} \label{analisis:algoritmo}
+
+\subsubsection{Idea general de la solución} \label{analisis:algoritmo:idea}
+
+La primera idea que surge de un problema de este tipo, es desarrollar una solución por fuerza bruta. Sin embargo, como se mencionó en la sección anterior, este algoritmo puede demorar mucho debido a las condiciones establecidas. Entonces se empieza a abordar un algoritmo de aproximación. \par
+
+El primer paso que se tomó fue el definir un tablero inicial dadas las restricciones de entrada como el que se muestra en la figura \ref{fig:grid_algo1}. Este particularmente, ya que se considera un desafío trazar el camino de los puntos azules sin interrumpir el de los amarillos. \par
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[scale=0.7]{img/grid_algo1.png}
+    \vspace{-0.5em}
+    \caption{Tablero inicial}
+    \label{fig:grid_algo1}
+\end{figure}
+
+Deliberadamente, se procedió a tratar de simular un algoritmo que resuelva primero el camino azul y después el amarillo. Para lograr esto, se empezaron a definir unos costos asociados a las celdas de acuerdo a la distancia de Manhattan ($d(a,b) = |a_1 - b_1| + |a_2 - b_2|$) con el punto de partida y el punto de llegada, como se muestra en la figura \ref{fig:grid_algo2}. \par
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[scale=0.7]{img/grid_algo2.png}
+    \vspace{-0.5em}
+    \caption{Cálculo de costos inicial}
+    \label{fig:grid_algo2}
+\end{figure}
+
+Sin embargo, se encontró un problema, y es que después de trazar el mejor camino azul y proceder a trazar el camino amarillo, no se encontraría ninguno, como se muestra en la figura \ref{fig:grid_algo3}. \par
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[scale=0.7]{img/grid_algo3.png}
+    \vspace{-0.5em}
+    \caption{Camino bloqueado}
+    \label{fig:grid_algo3}
+\end{figure}
+
+Esta situación implicó la necesidad de implementar una especie de backtracking o el cálculo de mejores costos para tener mayores repercusiones sobre bloquear un camino de otro color. Se consideró entonces la posibilidad de acumular costos \textit{inversos}. Esto es, un camino para un color tiene el costo usual sumado con el costo inverso de los otros colores. Por ejemplo, el color amarillo tiene un costo de $1 + 2$ en la celda $(1,2)$, debido a que sus puntos tienen esa distancia a esa celda. El costo inverso sería el mayor costo (cantidad de celdas) menos el costo normal del color. De esta forma, se desincentiva bloquear los mejores caminos de otros colores, como se muestra en la figura \ref{fig:grid_algo4}. \par
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[scale=0.7]{img/grid_algo4.png}
+    \vspace{-0.5em}
+    \caption{Cálculo de costos inversos}
+    \label{fig:grid_algo4}
+\end{figure}
+
+Sin embargo, rápido se desechó la anterior idea, debido a que una cantidad $k$ de puntos implica hacer $k * 2$ cálculos para saber el costo de una sola celda. Así mismo, situaciones como la que se presenta en la figura \ref{fig:grid_algo5} en donde existen varios colores cercanos, se desincentivaría el uso del camino correcto y se volvería a coger el camino más corto. \par
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[scale=0.7]{img/grid_algo5.png}
+    \vspace{-0.5em}
+    \caption{Efecto adverso por más colores}
+    \label{fig:grid_algo5}
+\end{figure}
+
+En este punto, se cayó en cuenta que la primera idea del algoritmo, de un doble costo asociado a la distancia origen y destino se parecen mucho al algoritmo de búsqueda A*, con la búsqueda del mejor camino entre 2 nodos. Es por esto que se toma esta idea y se decide utilizar el algoritmo A* para buscar el mejor camino entre cada par de puntos de cada color. Por cada par de puntos, se inicia en un punto y se empiezan a recorrer los vecinos siguiendo la lógica de prioridades y costos así:
+
+\begin{itemize}
+    \item $g(c) = g(c-1) + 1$, el costo de llegar a la siguiente celda como el costo de la celda padre más 1
+    \item $h(c) = d(c,e)$, el costo heurístico de ir desde la siguiente celda hasta la celda fin como la distancia Manhattan entre estas
+    \item $f(c) = g(c) + h(c)$
+\end{itemize}
+
+Al aplicar estas reglas y el algoritmo básico de A*, se encuentra que se está en una situación muy parecida a la inicial. Después de calcular el camino azul exactamente igual a como en la figura \ref{fig:grid_algo3} y determinar que es imposible trazar el camino amarillo, se necesita una forma de hacer backtracking sobre el camino azul para probar otro camino. A* no ofrece la posibilidad de determinar el N-avo mejor camino, por lo que siempre se va a recalcular el mismo camino azul. \par
+
+Se propone entonces afectar los costos después de calcular un camino, para desincentivar recorrer el mismo camino la siguiente vez que se calcule A*. Para lograr esto, se implementa un efecto parecido a un mapa de calor, donde los caminos (y celdas) que se calculan continuamente con el algoritmo crecen en un costo que incentiva al algoritmo a buscar otros caminos. \par
+
+La idea entonces es manejar una matriz de costos añadidos por cada color disponible, que se actualiza cada vez que se calcula un camino de un color. La matriz de costos añadidos crece en $n * m$ en cada celda visitada, con el fin de que sea más lucrativo recorrer todos los demás nodos que volver a pasar por uno ya visitado. Se puede entonces volver a representar $g(c)$ como: \par
+
+\begin{itemize}
+    \item $g(c) = g(c - 1) + 1 + a(c)$, el costo de llegar a una celda es el costo del camino existente más el costo añadido por repetir un camino sobre esa celda
+    \item con $a(c) = a(c) + n * m$ cada vez que $c$ hace parte del camino solución
+\end{itemize}
+
+Finalmente, el algoritmo recorre todos los puntos disponibles calculando A* sobre el par de puntos. Cuando encuentra un camino, incrementa los pesos y pasa al siguiente punto. Si el siguiente punto queda en un punto muerto o se repite, se regresa al punto anterior para recalcular un nuevo camino. Los costos añadidos ayudan a que A* no calcule siempre el mismo camino, sino que recorra el espacio de búsqueda para encontrar caminos óptimos no explorados. \par
+
+\subsubsection{Escritura del algoritmo} \label{analisis:algoritmo:escritura}
+
+El algoritmo se basa principalmente en dos funcionalidades: encontrar un camino entre un par de puntos, y encontrar todos los caminos del tablero. Para encontrar todos los caminos, se utiliza la primera funcionalidad. \par
+
+\newpage
+
+\begin{algorithm}[ht!]
+\caption{Calcular camino entre un par de puntos}
+\begin{algorithmic}[1] 
+\Procedure{SolvePoint}{$T, P, C, p$}
+    \State $start \leftarrow P[p][0] \land end \leftarrow P[p][1]$
+    \State $\textbf{let } q \textbf{ be a } \textsc{PriorityQueue}$
+    \State $q.\Call{put}{0, start}$
+    \State $\textbf{let } v \textbf{ be a } \textsc{Map}$
+    \State $v[start] \leftarrow (0, \textsc{Null})$
+    \State $ended \leftarrow 0$
+    \While{$\textbf{not } q.\Call{Empty}{ } \land ended = 0$}
+        \State $c \leftarrow queue.\Call{get}$
+        \If{$c = end$}
+            \State $ended \leftarrow 1$
+        \EndIf
+        \For{$n \textbf{ in } \Call{Neighbors}{c}$}
+            \State $g \leftarrow v[c][0] + 1 + C[p][n]$
+            \State $h \leftarrow \Call{Distance}{n, end}$
+            \State $f \leftarrow g + h$
+            \If{$n \textbf{ not in } v \lor v[n][0] > g$}
+                \State $q.\Call{put}{f, n}$
+                \State $v[n] \leftarrow (g, c)$
+            \EndIf
+        \EndFor
+    \EndWhile
+    \If{$end \textbf{ not in } v$}
+        \State \Return $[~]$
+    \EndIf
+    \State $path \leftarrow [~]$
+    \State $c \leftarrow end$
+    \While{$c \textbf{ is not } \textsc{Null}$}
+        \State $path \leftarrow c \cup path$
+        \State $c \leftarrow v[c][1]$
+        \State $C[p][c] \leftarrow C[p][c] + \textsc{AddedCost}$
+    \EndWhile
+    \State \Return $path$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\begin{algorithm}[ht!]
+\caption{Solucionar tablero}
+\begin{algorithmic}[1] 
+\Procedure{Solve}{$T, P, C, k$}
+    \State $p \leftarrow 1$
+    \While{$1 \leq p \leq k$}
+        \State $T.\Call{RemovePath}{p}$
+        \State $path \leftarrow \Call{SolvePoint}{T, P, C, p}$
+        \If{$path = [~]$}
+            \State $p \leftarrow p - 1$
+            \State \textbf{continue}
+        \EndIf
+        \State $T.\Call{AddPath}{path}$
+        \If{$T.\Call{Progress}{ } = 1$}
+            \State \Return $1$
+        \EndIf
+        \State $point \leftarrow point + 1$
+    \EndWhile
+    \State \Return $0$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Experimentación} \label{analisis:experimentacion}
+
+Para la experimentación, se cuenta con 25 niveles importados de la aplicación \textit{Flow Free}, los cuáles garantizan una solución única. Son tableros desde $5 \times 5$ hasta $9 \times 9$, 5 niveles por tamaño.
+
+\subsubsection{Prueba de completitud} \label{analisis:experimentacion:completitud}
+
+El objetivo de esta prueba es determinar si el algoritmo implementado es capaz de resolver los 25 niveles disponibles. El protocolo de experimentación es:
+
+\begin{enumerate}
+    \item Se cargan los 25 niveles en el formato de configuración de tablero como se presenta en la sección \ref{implementacion:configuracion}.
+    \item Cada nivel se corre el algoritmo con el comando \verb|python main.py -l LEVEL -s -d|. Más detalles en las secciones \ref{documentacion:ejecucion} y \ref{documentacion:solver}.
+    \item Se determina si el algoritmo fue capaz de solucionar el tablero
+\end{enumerate}
+
+\subsubsection{Prueba de tiempo de ejecución} \label{analisis:experimentacion:tiempo}
+
+El objetivo de esta prueba es determinar el tiempo que le toma al algoritmo solucionar distintas configuraciones de tableros. El protocolo de experimentación es:
+
+\begin{enumerate}
+    \item Se cargan los 25 niveles en el formato de configuración de tablero como se presenta en la sección \ref{implementacion:configuracion}.
+    \item Se seleccionan los siguientes niveles que el algoritmo puede solucionar:
+    \begin{itemize}
+        \item Nivel 5: tablero $5 \times 5$ con $4$ pares de puntos
+        \item Nivel 10: tablero $6 \times 6$ con $4$ pares de puntos
+        \item Nivel 15: tablero $7 \times 7$ con $6$ pares de puntos
+        \item Nivel 18: tablero $8 \times 8$ con $6$ pares de puntos
+        \item Nivel 25: tablero $9 \times 9$ con $8$ pares de puntos
+    \end{itemize}
+    \item Se corre el algoritmo de solución 3 veces por cada nivel y se mide el tiempo de ejecución.
+    \item Se promedian los tiempos de ejecución por cada nivel escogido.
+\end{enumerate}
+
+\subsection{Resultados} \label{analisis:resultados}
+
+\subsubsection{Prueba de completitud} \label{analisis:resultados:completitud}
+
+La prueba se sigue de acuerdo al protocolo establecido en la sección \ref{analisis:experimentacion:completitud}. Se determina que el algoritmo no es capaz de resolver los siguientes niveles / configuraciones:
+
+\begin{itemize}
+    \item Nivel 17: tablero $8 \times 8$ con $6$ pares de puntos
+    \item Nivel 19: tablero $8 \times 8$ con $7$ pares de puntos
+    \item Nivel 20: tablero $8 \times 8$ con $6$ pares de puntos
+    \item Nivel 22: tablero $9 \times 9$ con $8$ pares de puntos
+    \item Nivel 24: tablero $9 \times 9$ con $7$ pares de puntos
+\end{itemize}
+
+\subsubsection{Prueba de tiempo de ejecución} \label{analisis:resultados:tiempo}
+
+La prueba se sigue de acuerdo al protocolo establecido en la sección \ref{analisis:experimentacion:tiempo}. Los resultados se presentan en la siguiente tabla:
+
+\begin{table}[ht!]
+\begin{tabular}{|l|r|}
+\hline
+\multicolumn{1}{|c|}{\textbf{Grid}} & \multicolumn{1}{c|}{\textbf{Average time (s)}} \\ \hline
+$n=5, m=5, k=4$                       & $0.002658$                                       \\ \hline
+$n=6, m=6, k=4$                       & $0.004479$                                       \\ \hline
+$n=7, m=7, k=6$                       & $0.016763$                                       \\ \hline
+$n=8, m=8, k=6$                       & $0.173835$                                       \\ \hline
+$n=9, m=9, k=8$                       & $1.515127$                                       \\ \hline
+\end{tabular}
+\end{table}
+
+Como se puede evidenciar, conforme el tamaño del tablero crece, el tiempo de ejecución crece a gran ritmo. Esto parece indicar que la complejidad del algoritmo obedece la de un polinomio de alto grado. \par
+
+\newpage
+
+
 
 \section{Documentación} \label{documentacion}
 
@@ -450,6 +704,22 @@ $ python main.py -r ROWS COLS POINTS
 \end{verbatim}
 
 donde \textsc{ROWS}, \textsc{COLS} y \textsc{POINTS} son 3 enteros representando la cantidad de filas, columnas y puntos respectivamente. \par
+
+\subsection{Solver} \label{documentacion:solver}
+
+El programa cuenta con un solver que implementa el algoritmo descrito en la sección \ref{analisis:algoritmo}. Este solver se puede correr con cualquier de las opciones de ejecución presentadas anteriormente, agregando la bandera \verb|-s|. Por ejemplo, para correr el solver sobre el nivel 1: \par
+
+\begin{verbatim}
+$ python main.py -l 1 -s
+\end{verbatim}
+
+Así mismo, activando la bandera de debug \verb|-d|, es posible ver el paso a paso que el solver realiza para solucionar el tablero: \par
+
+\begin{verbatim}
+$ python main.py -l 1 -s -d
+\end{verbatim}
+
+El solver no garantiza encontrar una solución, así la configuración del tablero tenga una (o varias). \par
 
 \subsection{Documentación del código}
 
