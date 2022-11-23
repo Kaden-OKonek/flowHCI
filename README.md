@@ -165,7 +165,7 @@ where `ROWS` is the number of rows, `COLS` is the number of columns and `QPOINTS
 
 ## Solver 🧠
 
-The Flow game is a numberlink-like game. This means that solving the game is an NP-hard problem. However, there are some heuristics that can be used to find an approximate solution to the game.
+The Flow game is a numberlink-like game. This means that solving the game is an NP-complete problem. However, there are some heuristics that can be used to find an approximate solution to the game.
 
 The solver implemented in this project is a modified version of the [A* algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm). That said, the solver is not guaranteed to find a solution to the grid, even if there is one (or more). 
 
