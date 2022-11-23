@@ -123,7 +123,7 @@ python main.py -h
 
 ### Levels
 
-There are [multiple levels](/data/levels.json) pre-configured. These levels guarantee that there is always an unique solution to the grid.
+There are currently [25 levels](/data/levels.json) pre-configured. These levels guarantee that there is always an unique solution to the grid.
 
 Take a peek at the levels
 
