@@ -3,6 +3,7 @@ import os, argparse, sys
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
 from components.grid import Grid as Grid
+from components.solver import Solver as Solver
 from components import eventmanager, model, controller, view
 from utils import config, utils
 
@@ -40,7 +41,17 @@ def main(args):
             sys.exit(1)
 
     grid = Grid.from_config(grid_config)
-    print("Loaded configuration correctly")
+    print("Loaded configuration correctly\n")
+
+    if args.solve:
+        solver = Solver(grid)
+        print("The solver is looking for a solution, this might take a while...\n")
+        found_solution = solver.solve(args.debug)
+        if found_solution:
+            print("The solver found a solution!\n")
+        else:
+            print("The solver couldn't find a solution...\n")
+            grid.restart()
 
     event_manager = eventmanager.EventManager()
     gamemodel = model.GameEngine(event_manager, grid)
@@ -53,6 +64,20 @@ if __name__ == "__main__":
     # Args parser
     parser = argparse.ArgumentParser()
 
+    parser.add_argument(
+        "-s",
+        "--solve",
+        help="attempt to solve the grid",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
+        "-d",
+        "--debug",
+        help="debug mode (prints the solver actions)",
+        action="store_true",
+        default=False,
+    )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-f", "--file", help="path to a grid config file", type=str)
     group.add_argument("-l", "--level", help="level number of default levels", type=int)
