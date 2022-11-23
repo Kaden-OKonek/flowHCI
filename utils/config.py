@@ -30,7 +30,7 @@ MIN_POINTS = 2
 MAX_POINTS = len(COLORS)
 
 # Grid size
-MAX_GRID_N = 15  # 15x15 is the maximum grid size
+MAX_GRID_N = 9  # 9x9 is the maximum grid size
 
 # Tile states
 TILE_STATES = [
@@ -64,7 +64,7 @@ TILE_STATES = [
 # VIEW
 
 # Tiles configuration
-TILE_SIZE = 42
+TILE_SIZE = 48
 
 # Fonts configuration
 FONT_SIZE = 20
