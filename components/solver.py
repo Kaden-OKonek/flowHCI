@@ -1,6 +1,6 @@
 from queue import PriorityQueue
 
-from grid import Grid
+from .grid import Grid
 from utils import config
 
 
@@ -21,13 +21,13 @@ class Solver:
 
         self.grid = grid
         # Each point-pair has an added cost for the paths it can take
-        self.added_costs = [
+        self._added_costs = [
             [[0 for _ in range(self.grid.cols)] for _ in range(self.grid.rows)]
             for _ in range(self.grid.qpoints)
         ]
         # Each point-pair has a dictionary of tried paths
         # (Attempted paths that didn't reach a solution)
-        self.tried_paths = [{} for _ in range(self.grid.qpoints)]
+        self._tried_paths = [{} for _ in range(self.grid.qpoints)]
 
         # The added cost of running a path is enough to encourage
         # the algorithm to try different paths the next iteration
@@ -86,9 +86,9 @@ class Solver:
         Returns:
             int: The heuristic cost between the two cells"""
 
-        return self.distance_between(cell1, cell2)
+        return self._distance_between(cell1, cell2)
 
-    def add_costs(self, point: int, path: list[tuple[int, int]]) -> None:
+    def _add_costs(self, point: int, path: list[tuple[int, int]]) -> None:
         """Adds costs to the grid for a path.
 
         Args:
@@ -96,19 +96,19 @@ class Solver:
             path (list[tuple[int, int]]): The path to add costs to"""
 
         for cell in path[1:-1]:  # exclude start and end cells
-            self.added_costs[point][cell[0]][cell[1]] += self.ADDED_COST
+            self._added_costs[point][cell[0]][cell[1]] += self.ADDED_COST
 
-    def restart_costs(self, point: int) -> None:
+    def _restart_costs(self, point: int) -> None:
         """Resets the added costs for a point-pair.
 
         Args:
             point (int): The point-pair index"""
 
-        self.added_costs[point] = [
+        self._added_costs[point] = [
             [0 for _ in range(self.grid.cols)] for _ in range(self.grid.rows)
         ]
 
-    def solve_point(self, point: int) -> list[tuple[int, int]]:
+    def _solve_point(self, point: int) -> list[tuple[int, int]]:
         """Finds the best path for a point-pair. It does so by using A*.
         The calculated path adds costs to the grid.
 
@@ -134,13 +134,13 @@ class Solver:
             if current == end:
                 break
 
-            for neighbor in self.get_neighbors(point, current):
+            for neighbor in self._get_neighbors(point, current):
                 g_cost = (
                     visited[current][0]
                     + 1
-                    + self.added_costs[point][neighbor[0]][neighbor[1]]
+                    + self._added_costs[point][neighbor[0]][neighbor[1]]
                 )
-                h_cost = self.heuristic(neighbor, end)
+                h_cost = self._get_heuristic(neighbor, end)
                 f_cost = g_cost + h_cost
 
                 if neighbor in visited and visited[neighbor][0] <= g_cost:
@@ -168,11 +168,11 @@ class Solver:
             current = visited[current][1]
 
         # Add cost to the cells in the path
-        self.add_costs(point, path)
+        self._add_costs(point, path)
 
         return path[::-1]  # reverse the path
 
-    def flatten_path(self, path: list[tuple[int, int]]) -> int:
+    def _flatten_path(self, path: list[tuple[int, int]]) -> int:
         """Converts a path into a hash for quick comparisons.
 
         Args:
@@ -183,14 +183,14 @@ class Solver:
 
         return hash("".join([str(cell) for cell in path]))
 
-    def restart_point(self, point: int) -> None:
+    def _restart_point(self, point: int) -> None:
         """Resets the added costs and tried paths for a point-pair.
 
         Args:
             point (int): The point-pair index"""
 
-        self.restart_costs(point)
-        self.tried_paths[point] = {}
+        self._restart_costs(point)
+        self._tried_paths[point] = {}
         self.grid.remove_path(point)
 
     def is_repeating(self, tried_paths: list[int]) -> bool:
@@ -237,14 +237,16 @@ class Solver:
 
         return False
 
-    def print_grid(self, tabbed=False) -> None:
+    def _print_grid(self, tabbed=False) -> None:
         """Prints the grid to the console"""
 
         if tabbed:
             for row in self.grid.grid:
+                row = [cell[0] for cell in row]
                 print("\t", row)
         else:
             for row in self.grid.grid:
+                row = [cell[0] for cell in row]
                 print(row)
         print()
 
@@ -263,7 +265,7 @@ class Solver:
             bool: True if the grid was solved, False otherwise"""
 
         point = 0  # the current point-pair index
-        self.print_grid() if debug else None
+        self._print_grid() if debug else None
 
         while True:
             print("Solving point:", point + 1) if debug else None
@@ -272,38 +274,35 @@ class Solver:
             self.grid.remove_path(point)
 
             # Find a path for the current point-pair
-            path = self.solve_point(point)
+            path = self._solve_point(point)
 
             if len(path) == 0:
                 print("No path found, backtracking...\n") if debug else None
 
                 # If there is no path, backtrack to the previous point
-                self.restart_point(point)
+                self._restart_point(point)
                 point -= 1
                 # If there is no previous point, there is no solution
                 if point < 0:
-                    print(
-                        "The algorithm wasn't able to find a solution"
-                    ) if debug else None
                     return False
                 continue
 
-            flattened_path = self.flatten_path(path)
+            flattened_path = self._flatten_path(path)
             print("Found path:", flattened_path) if debug else None
 
             # If the path has already been tried, find a new path
             tried_paths = [flattened_path]
             repeating = False
             repeats = 0
-            while flattened_path in self.tried_paths[point]:
+            while flattened_path in self._tried_paths[point]:
                 repeats += 1
 
                 print(
                     "\tPath already tried\n\n\tContinue solving point:", point + 1
                 ) if debug else None
 
-                path = self.solve_point(point)
-                flattened_path = self.flatten_path(path)
+                path = self._solve_point(point)
+                flattened_path = self._flatten_path(path)
                 tried_paths.append(flattened_path)
 
                 print("\tFound path:", flattened_path) if debug else None
@@ -314,13 +313,10 @@ class Solver:
                     ) if debug else None
 
                     repeating = True
-                    self.restart_point(point)
+                    self._restart_point(point)
                     point -= 1
                     # If there is no previous point, there is no solution
                     if point < 0:
-                        print(
-                            "The algorithm wasn't able to find a solution"
-                        ) if debug else None
                         return False
                     break
 
@@ -328,12 +324,12 @@ class Solver:
                 continue
 
             # Add the path to the tried paths
-            self.tried_paths[point][flattened_path] = True
+            self._tried_paths[point][flattened_path] = True
 
             # Add the path to the grid
             self.grid.add_path(path)
 
-            self.print_grid() if debug else None
+            self._print_grid() if debug else None
 
             # Check if the grid is solved
             if self.grid.progress() == 1:
@@ -344,5 +340,4 @@ class Solver:
 
             # If the point is out of bounds, the algorithm found no solution
             if point >= self.grid.qpoints:
-                print("The algorithm wasn't able to find a solution") if debug else None
                 return False

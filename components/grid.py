@@ -414,5 +414,5 @@ class Grid:
             current_path (int): index of the path to remove
         """
 
-        self._current_path = current_path
+        self._current_path = current_path + 1
         self._restart_path_until_size()
