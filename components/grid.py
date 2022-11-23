@@ -97,7 +97,7 @@ class Grid:
                 while (row, col) in points_set:
                     row, col = Grid.randomize_point(rows, cols)
                 points_set.add((row, col))
-                points[i] += [[row, col]]
+                points[i] += [(row, col)]
 
         return {
             "rows": rows,
@@ -118,6 +118,7 @@ class Grid:
         Returns:
             tuple[int, int, int]: state of the cell
         """
+
         row, col = tuple
         return self.grid[row][col]
 
@@ -137,7 +138,7 @@ class Grid:
         """Initialize the grid with the points"""
 
         for i in range(self.qpoints):
-            for row, col in self.points[i]:
+            for (row, col) in self.points[i]:
                 # The state of the points is the index of the point
                 # representing the color and 0, 0
                 self.grid[row][col] = (i + 1, 0, 0)

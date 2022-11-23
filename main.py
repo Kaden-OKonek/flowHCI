@@ -14,6 +14,7 @@ def main(args):
         print(e)
         sys.exit(1)
 
+    grid_config = None
     if args.file:
         try:
             grid_config = utils.load_grid_config(args.file)
@@ -22,7 +23,7 @@ def main(args):
             sys.exit(1)
     elif args.level:
         if args.level < 1 or args.level > len(levels):
-            print("Level not found")
+            print("Level not found, please choose a level between 1 and", len(levels))
             sys.exit(1)
         grid_config = levels[args.level - 1]
     elif args.random:

@@ -103,4 +103,18 @@ def load_grid_config(file: str) -> list | dict:
     except FileNotFoundError as message:
         print("Cannot load:", file)
         raise Exception(message)
-    return json.load(file)
+
+    data = json.load(file)
+    file.close()
+
+    if isinstance(data, list):
+        for config in data:
+            points = [[tuple(point) for point in pair] for pair in config["points"]]
+            config["points"] = points
+        return data
+    elif isinstance(data, dict):
+        points = [[tuple(point) for point in pair] for pair in data["points"]]
+        data["points"] = points
+        return data
+    else:
+        raise Exception("Invalid JSON file")
