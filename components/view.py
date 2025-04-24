@@ -45,12 +45,13 @@ class GameView(Listener):
     The View of the game. It is responsible for drawing the game state to the screen.
     """
 
-    def __init__(self, event_manager: EventManager, model: model.GameEngine) -> None:
+    def __init__(self, event_manager: EventManager, model: model.GameEngine, colored_tiles=None) -> None:
         """
         Args:
             event_manager (EventManager): to post messages to
             the event queue.
             model (GameEngine): the game engine.
+            colored_tiles (dict, optional): custom colored tiles based on user preferences
 
         Attributes:
             is_initialized (bool): whether the GUI is initialized
@@ -60,11 +61,13 @@ class GameView(Listener):
             tiles (dict): the tiles sprites
             colors (list): the colors to use for the tiles
             grid_gui (list): the grid of tiles
+            custom_colored_tiles (dict): custom colored tiles from user selection
         """
 
         self.event_manager = event_manager
         self.event_manager.register_listener(self)
         self.model = model
+        self.custom_colored_tiles = colored_tiles
 
         self.is_initialized = False
         self.screen = None
@@ -121,6 +124,18 @@ class GameView(Listener):
 
         pg.display.flip()
 
+    def load_resources(self):
+        """Load tile resources - either default or custom colored tiles"""
+        if self.custom_colored_tiles:
+            # Use custom colored tiles provided by the user
+            self.tiles = self.custom_colored_tiles
+        else:
+            # Load default tiles
+            self.tiles = utils.load_tiles()
+            
+        # Generate color list
+        self.colors = utils.randomize_colors(self.model.grid.qpoints)
+
     def initialize(self) -> None:
         """
         Initialize the GUI.
@@ -136,8 +151,8 @@ class GameView(Listener):
             config.FONT_SIZE,
         )
 
-        self.tiles = utils.load_tiles()
-        self.colors = utils.randomize_colors(self.model.grid.qpoints)
+        # Load tiles (custom or default)
+        self.load_resources()
 
         for row in range(self.model.grid.rows):
             self.grid_gui.append([])
